@@ -5,7 +5,7 @@
 	"php": ">=8.0",
 	"ext-mongodb": "*",
 	"mongodb/mongodb": "^1.8",
-	"gcgov/framework": "^1.0"
+	"gcgov/framework": "^1.1.2"
   },
   "autoload": {
 	"psr-4": {
