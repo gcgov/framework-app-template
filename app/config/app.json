@@ -1,0 +1,13 @@
+{
+  "app": {
+	"title": "{app_title}",
+	"guid": "{app_guid}"
+  },
+  "email": {
+	"fromAddress": "{app_smtp_sendmail_from_address}",
+	"fromName": "{app_smtp_sendmail_from_name}"
+  },
+  "settings": {
+	"useSession": false
+  }
+}

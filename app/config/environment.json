@@ -1,0 +1,16 @@
+{
+  "type": "local",
+  "serverName": "app.local",
+  "baseUrl": "{app_url}",
+  "phpPath": "{app_php_path}\\php-cgi.exe -c {app_absolute_path}\\srv\\app.local\\php.ini",
+  "mongoDatabases": [
+	{
+	  "default": true,
+	  "server": "",
+	  "database": "",
+	  "username": "",
+	  "password": "",
+	  "authSource": ""
+	}
+  ]
+}

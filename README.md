@@ -1,2 +1,28 @@
-# framework-app-template
-App template repository to scaffold a new application based on gcgov/framework
+# Framework App Template
+
+App template repository to scaffold a new [gcgov/framework](https://github.com/gcgov/framework)
+
+## Instructions
+
+1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a new repository for your
+   app
+2. Replace app variables across configuration files:
+    - Variables to replace:
+        - `{app_guid}` -> unique guid (generate from https://www.guidgenerator.com/)
+        - `{app_title}` -> human-readable title of app
+        - `{app_url}` -> full url to root of app
+        - `{app_absolute_path}` -> absolute path to app root directory
+        - `{app_php_path}` -> absolute path to the PHP executable root directory
+        - `{app_smtp_server}` -> smtp server address
+        - `{app_smtp_sendmail_from_address}` -> default email address to send emails from
+        - `{app_smtp_sendmail_from_name}` -> default human-readable name that will appear as the sender of emails
+        - `{app_ssl_path}` -> absolute path to a current cacert.pem file for CURL and OpenSSL extensions
+            - Global cacert.pem is available from Mozilla at https://curl.se/docs/caextract.html
+            - Use behind a firewall with SSL decryption will require appending private
+    - Files to replace variables in:
+        - `/srv/app.local/php.ini`
+        - `/srv/app.local-cron/php.ini`
+        - `/app/config/app.json`
+        - `/app/config/environment.json`
+3. Test widget module.
+4. Create your models, controllers, and services!

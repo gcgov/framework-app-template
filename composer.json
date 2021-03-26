@@ -1,5 +1,8 @@
 {
+  "name": "gcgov/framework-app-template",
+  "description": "App template repository to scaffold a new application based on gcgov/framework",
   "require": {
+	"php": ">=8.0",
 	"ext-mongodb": "*",
 	"mongodb/mongodb": "^1.8",
 	"gcgov/framework": "^1.0"
