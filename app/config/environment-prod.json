@@ -1,0 +1,16 @@
+{
+  "type": "prod",
+  "serverName": "app.prod",
+  "baseUrl": "{prod_app_url}",
+  "phpPath": "{prod_app_php_path}\\php-cgi.exe -c {prod_app_absolute_path}\\srv\\app.prod\\php.ini",
+  "mongoDatabases": [
+	{
+	  "default": true,
+	  "server": "",
+	  "database": "",
+	  "username": "",
+	  "password": "",
+	  "authSource": ""
+	}
+  ]
+}

@@ -19,9 +19,16 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
         - `{app_ssl_path}` -> absolute path to a current cacert.pem file for CURL and OpenSSL extensions
             - Global cacert.pem is available from Mozilla at https://curl.se/docs/caextract.html
             - Use behind a firewall with SSL decryption will require appending private
+        - **Production Variables**:
+            - `{prod_app_url}`
+            - `{prod_app_absolute_path}`
+            - `{prod_app_php_path}`
+            - `{prod_app_ssl_path}`
     - Files to replace variables in:
         - `/srv/app.local/php.ini`
-        - `/srv/app.local-cron/php.ini`
+        - `/srv/app.local-cli/php.ini`
+        - `/srv/app.prod/php.ini`
+        - `/srv/app.prod-cli/php.ini`
         - `/app/config/app.json`
         - `/app/config/environment.json`
 3. Test widget module.
