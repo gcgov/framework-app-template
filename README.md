@@ -6,7 +6,7 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
 
 1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a new repository for your
    app
-2. Replace app variables across configuration files:
+1. Replace app variables across configuration files:
     - Variables to replace:
         - `{app_guid}` -> unique guid (generate from https://www.guidgenerator.com/)
         - `{app_title}` -> human-readable title of app
@@ -31,5 +31,10 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
         - `/srv/app.prod-cli/php.ini`
         - `/app/config/app.json`
         - `/app/config/environment.json`
-3. Test widget module.
-4. Create your models, controllers, and services!
+1. Move `/app/config/environment-local.json` to `/app/config/environment.json`
+1. Move `/www/web-local.config` to `/www/web.config`
+1. Configure web server
+   - Root directory must map to `/www/`
+   - PHP instance must use `/srv/app.local/php.ini` for configuration
+1. Test widget module.
+1. Create your models, controllers, and services!
