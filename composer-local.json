@@ -5,8 +5,17 @@
 	"php": ">=8.0",
 	"ext-mongodb": "*",
 	"mongodb/mongodb": "^1.8",
-	"gcgov/framework": "^1.3"
+	"gcgov/framework": "dev-main"
   },
+  "repositories": [
+	{
+	  "type": "path",
+	  "url": "C:/inetpub/www/packages/framework/",
+	  "options": {
+		"symlink": true
+	  }
+	}
+  ],
   "autoload": {
 	"psr-4": {
 	  "app\\": "app/"

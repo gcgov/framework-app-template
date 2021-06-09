@@ -6,11 +6,8 @@
   "mongoDatabases": [
 	{
 	  "default": true,
-	  "server": "",
 	  "database": "",
-	  "username": "",
-	  "password": "",
-	  "authSource": ""
+	  "uri": ""
 	}
   ]
 }
