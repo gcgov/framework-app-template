@@ -41,6 +41,10 @@ class router
 		$routes[] = new route( 'POST', '/widgets/{_id}', '\app\controllers\widget', 'save', true, [ 'Widget.Read', 'Widget.Write' ] );
 		$routes[] = new route( 'DELETE', '/widgets/{_id}', '\app\controllers\widget', 'delete', true, [ 'Widget.Read', 'Widget.Write' ] );
 
+		//CLI example
+		//to run in command line: `/app/cli/local.bat /cli/widgets`
+		$routes[] = new route( 'CLI', '/widgets/{_id}', '\app\controllers\widget', 'getOne', false );
+
 		return $routes;
 	}
 

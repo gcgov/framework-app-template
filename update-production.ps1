@@ -40,5 +40,17 @@ Write-Host "update environment files"
 Copy-Item -Path app/config/environment-prod.json -Destination app/config/environment.json
 Copy-Item -Path composer-prod.json -Destination composer.json
 
+#UPDATE VERSION
+Write-Host "Set versions"
+$status = git status | Select -first 1
+$statusWords = -split $status
+$apiVersion = $statusWords[-1]
+Write-Host "Version: $apiVersion"
+
+$jsonBase = @{}
+$jsonBase.Add("version",$apiVersion)
+$jsonBase.Add("inherit",$true)
+$jsonBase | ConvertTo-Json | Out-File "version.json"
+
 Write-Host "composer update"
 composer update

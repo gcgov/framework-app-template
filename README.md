@@ -31,6 +31,9 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
         - `/srv/app.prod-cli/php.ini`
         - `/app/config/app.json`
         - `/app/config/environment.json`
+        - `/app/cli/local.bat`
+        - `/app/cli/local-debug.bat`
+        - `/app/cli/prod.bat`
 1. Move `/composer-local.json` to `/composer.json`
 1. Move `/app/config/environment-local.json` to `/app/config/environment.json`
 1. Move `/www/web-local.config` to `/www/web.config`
