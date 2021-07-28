@@ -35,15 +35,18 @@ class router
 		/** @var \gcgov\framework\models\route[] $routes */
 		$routes = [];
 
+		//if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, $routePrepend="/api";
+		$routePrepend = '{app_relative_url}';
+
 		//WIDGETS
-		$routes[] = new route( 'GET', '/widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );
-		$routes[] = new route( 'GET', '/widgets/{_id}', '\app\controllers\widget', 'getOne', true, [ 'Widget.Read' ] );
-		$routes[] = new route( 'POST', '/widgets/{_id}', '\app\controllers\widget', 'save', true, [ 'Widget.Read', 'Widget.Write' ] );
-		$routes[] = new route( 'DELETE', '/widgets/{_id}', '\app\controllers\widget', 'delete', true, [ 'Widget.Read', 'Widget.Write' ] );
+		$routes[] = new route( 'GET', $routePrepend.'/widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );
+		$routes[] = new route( 'GET', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'getOne', true, [ 'Widget.Read' ] );
+		$routes[] = new route( 'POST', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'save', true, [ 'Widget.Read', 'Widget.Write' ] );
+		$routes[] = new route( 'DELETE', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'delete', true, [ 'Widget.Read', 'Widget.Write' ] );
 
 		//CLI example
 		//to run in command line: `/app/cli/local.bat /cli/widgets`
-		$routes[] = new route( 'CLI', '/widgets/{_id}', '\app\controllers\widget', 'getOne', false );
+		$routes[] = new route( 'CLI', '/cli/widgets', '\app\controllers\widget', 'getAll', false );
 
 		return $routes;
 	}

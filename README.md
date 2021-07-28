@@ -11,6 +11,7 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
         - `{app_guid}` -> unique guid (generate from https://www.guidgenerator.com/)
         - `{app_title}` -> human-readable title of app
         - `{app_url}` -> full url to root of app
+        - `{app_relative_url}` -> if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, replace with "/api" 
         - `{app_absolute_path}` -> absolute path to app root directory
         - `{app_php_path}` -> absolute path to the PHP executable root directory
         - `{app_smtp_server}` -> smtp server address
