@@ -127,7 +127,7 @@ class widget
 
 		try {
 			$widget   = \app\models\widget::jsonDeserialize( $widgetJSON );
-			$updateResult = \app\models\widget::save( $widget );
+			\app\models\widget::save( $widget );
 		}
 		catch( modelException $e ) {
 			throw new controllerException( $e->getMessage(), $e->getCode(), $e );
