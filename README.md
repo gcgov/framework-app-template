@@ -10,7 +10,8 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
     - Variables to replace:
         - `{app_guid}` -> unique guid (generate from https://www.guidgenerator.com/)
         - `{app_title}` -> human-readable title of app
-        - `{app_url}` -> full url to root of app
+        - `{app_root_url}` -> root url of app (ex: https://signatures.garrettcounty.local)
+        - `{app_base_path}` -> base url of app (ex: /api/, Or: / if site is at url root)
         - `{app_relative_url}` -> if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, replace with "/api" 
         - `{app_absolute_path}` -> absolute path to app root directory
         - `{app_php_path}` -> absolute path to the PHP executable root directory
@@ -20,11 +21,24 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
         - `{app_ssl_path}` -> absolute path to a current cacert.pem file for CURL and OpenSSL extensions
             - Global cacert.pem is available from Mozilla at https://curl.se/docs/caextract.html
             - Use behind a firewall with SSL decryption will require appending private
-        - **Production Variables**:
-            - `{prod_app_url}`
-            - `{prod_app_absolute_path}`
-            - `{prod_app_php_path}`
-            - `{prod_app_ssl_path}`
+        - Microsoft Services
+          - `{app_microsoft_client_id}` -> Microsoft Azure App client id
+          - `{app_microsoft_client_secret}` -> Microsoft Azure App client secret
+          - `{app_microsoft_tenant}` -> Microsoft App tenant
+          - `{app_microsoft_drive_id}` -> Sharepoint Drive Id (if using files integration)
+          - `{app_microsoft_default_from_address}` -> Default from email address (if using Graph API Mail.Send)
+    - **Production Variables**:
+        - `{prod_app_root_url}`
+        - `{prod_app_base_path}`
+        - `{prod_app_absolute_path}`
+        - `{prod_app_php_path}`
+        - `{prod_app_ssl_path}`
+        - Microsoft Services
+            - `{prod_app_microsoft_client_id}`
+            - `{prod_app_microsoft_client_secret}`
+            - `{prod_app_microsoft_tenant}`
+            - `{prod_app_microsoft_drive_id}`
+            - `{prod_app_microsoft_default_from_address}`
     - Files to replace variables in:
         - `/srv/app.local/php.ini`
         - `/srv/app.local-cli/php.ini`

@@ -14,7 +14,7 @@ use gcgov\framework\config;
  *     )
  * )
  *
- * @OA\Server(url="{app_url}")
+ * @OA\Server(url="{app_root_url}{app_base_path}")
  *
  */
 final class app implements \gcgov\framework\interfaces\app {

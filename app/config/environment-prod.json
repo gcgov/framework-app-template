@@ -1,7 +1,8 @@
 {
   "type": "prod",
   "serverName": "app.prod",
-  "baseUrl": "{prod_app_url}",
+  "rootUrl": "{prod_app_root_url}",
+  "basePath": "{prod_app_base_path}",
   "phpPath": "{prod_app_php_path}\\php-cgi.exe -c {prod_app_absolute_path}\\srv\\app.prod\\php.ini",
   "mongoDatabases": [
 	{
@@ -9,5 +10,15 @@
 	  "database": "",
 	  "uri": ""
 	}
-  ]
+  ],
+  "appDictionary": {
+	"key": "value"
+  },
+  "microsoft": {
+	"clientId": "{prod_app_microsoft_client_id}",
+	"clientSecret": "{prod_app_microsoft_client_secret}",
+	"tenant": "{prod_app_microsoft_tenant}",
+	"driveId": "{prod_app_microsoft_drive_id}",
+	"fromAddress": "{prod_app_microsoft_default_from_address}"
+  }
 }
