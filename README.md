@@ -27,6 +27,12 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
           - `{app_microsoft_tenant}` -> Microsoft App tenant
           - `{app_microsoft_drive_id}` -> Sharepoint Drive Id (if using files integration)
           - `{app_microsoft_default_from_address}` -> Default from email address (if using Graph API Mail.Send)
+        - Payjunction Services
+          - `{app_payjunction_username}` -> PayJunction API Username
+          - `{app_payjunction_password}` -> PayJunction API Password
+          - `{app_payjunction_api_key}` -> PayJunction API Key
+          - `{app_payjunction_terminal_id}` -> PayJunction Smart Terminal Id - optional
+          - `{app_payjunction_merchant_id}` -> PayJunction Smart Terminal Merchant Id - optional but required if using smart terminal
     - **Production Variables**:
         - `{prod_app_root_url}`
         - `{prod_app_base_path}`
@@ -39,6 +45,12 @@ App template repository to scaffold a new [gcgov/framework](https://github.com/g
             - `{prod_app_microsoft_tenant}`
             - `{prod_app_microsoft_drive_id}`
             - `{prod_app_microsoft_default_from_address}`
+      - Payjunction Services
+          - `{prod_app_payjunction_username}`
+          - `{prod_app_payjunction_password}`
+          - `{prod_app_payjunction_api_key}`
+          - `{prod_app_payjunction_terminal_id}`
+          - `{prod_app_payjunction_merchant_id}`
     - Files to replace variables in:
         - `/srv/app.local/php.ini`
         - `/srv/app.local-cli/php.ini`

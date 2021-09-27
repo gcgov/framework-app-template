@@ -20,5 +20,12 @@
 	"tenant": "{prod_app_microsoft_tenant}",
 	"driveId": "{prod_app_microsoft_drive_id}",
 	"fromAddress": "{prod_app_microsoft_default_from_address}"
+  },
+  "payjunction": {
+	"username": "{prod_app_payjunction_username}",
+	"password": "{prod_app_payjunction_password}",
+	"apiKey": "{prod_app_payjunction_api_key}",
+	"terminalId": "{prod_app_payjunction_terminal_id}",
+	"merchantId": "{prod_app_payjunction_merchant_id}"
   }
 }
