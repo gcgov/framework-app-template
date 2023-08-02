@@ -1,3 +1,12 @@
+Param(
+    [Parameter()]
+    [string]
+    $env='prod'
+)
+if ($env -eq $null) {
+    $env = read-host -Prompt "Please enter an environment (local, dev, or prod)"
+}
+
 function Menu ($object, $prompt) {
     if (!$object) { Throw 'Must provide an object.' }
     $ok = $false
@@ -37,9 +46,9 @@ Write-Host "git submodule update"
 git submodule update
 
 Write-Host "update environment files"
-Copy-Item -Path app/config/environment-prod.json -Destination app/config/environment.json
-Copy-Item -Path composer-prod.json -Destination composer.json
-Copy-Item -Path www/web-prod.config -Destination www/web.config
+Copy-Item -Path app/config/environment-$env.json -Destination app/config/environment.json
+Copy-Item -Path composer-$env.json -Destination composer.json
+Copy-Item -Path www/web-$env.config -Destination www/web.config
 
 #UPDATE VERSION
 Write-Host "Set versions"
