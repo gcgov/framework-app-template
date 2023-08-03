@@ -3,6 +3,7 @@
   "serverName": "app.prod",
   "rootUrl": "{prod_app_root_url}",
   "basePath": "{prod_app_base_path}",
+  "redirectAfterLoginUrl": "{app_redirect_after_login_url}",
   "phpPath": "{prod_app_php_path}\\php-cgi.exe -c {prod_app_absolute_path}\\srv\\app.prod\\php.ini",
   "mongoDatabases": [
 	{

@@ -10,6 +10,8 @@
   "settings": {
 	"useSession": false,
 	"enableDocumentationRoute": true,
-	"enableAuthRoutes": true
+	"enableOauthRoutes": false,
+	"enableMicrosoftOnBehalfOfRoutes": false,
+	"enablePasswordAuthRoutes": false
   }
 }
