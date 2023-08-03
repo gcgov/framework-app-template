@@ -19,6 +19,10 @@
 	  "auditDatabaseUri": ""
 	}
   ],
+  "jwtAuth": {
+    "tokenIssuedBy": "{app_root_url}",
+    "tokenPermittedFor": "{app_base_path}"
+  },
   "appDictionary": {
 	"key": "value"
   },
