@@ -8,6 +8,7 @@
 	"fromName": "{app_smtp_sendmail_from_name}"
   },
   "settings": {
-	"useSession": false
+	"useSession": false,
+	"enableDocumentationRoute": true
   }
 }
