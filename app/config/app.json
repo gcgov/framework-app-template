@@ -9,6 +9,7 @@
   },
   "settings": {
 	"useSession": false,
-	"enableDocumentationRoute": true
+	"enableDocumentationRoute": true,
+	"enableAuthRoutes": true
   }
 }
