@@ -7,7 +7,7 @@ const databasePasswordToCreate = ""
 
 db = connect(server+":27017/admin");
 
-db.auth(username,password);
+db.auth(adminUsername,adminPassword);
 
 db = db.getSiblingDB(targetDatabase);
 
