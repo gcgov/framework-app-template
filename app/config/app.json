@@ -12,6 +12,7 @@
 	"enableDocumentationRoute": true,
 	"enableOauthRoutes": false,
 	"enableMicrosoftOnBehalfOfRoutes": false,
-	"enablePasswordAuthRoutes": false
+	"enablePasswordAuthRoutes": false,
+	"enableUserRoutes": false
   }
 }

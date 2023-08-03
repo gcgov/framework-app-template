@@ -7,7 +7,7 @@ use gcgov\framework\exceptions\controllerException;
 use gcgov\framework\exceptions\modelException;
 use gcgov\framework\interfaces\controller;
 use gcgov\framework\models\controllerDataResponse;
-
+use gcgov\framework\models\controllerPagedDataResponse;
 
 /**
  * Class widget
@@ -43,6 +43,20 @@ class widget
 	 *     path="/widget/",
 	 *     tags={"Widget"},
 	 *     description="Fetch all widgets",
+	 *     @OA\Parameter(
+	 *         name="limit",
+	 *         in="query",
+	 *         description="How many objects to fetch",
+	 *         required=false,
+	 *         @OA\Schema(type="int")
+	 *     ),
+	 *     @OA\Parameter(
+	 *         name="page",
+	 *         in="query",
+	 *         description="What page of objects to fetch. Defaults to 1 when limit is provided.",
+	 *         required=false,
+	 *         @OA\Schema(type="int")
+	 *     ),
 	 *     @OA\Response(
 	 *      response="200",
 	 *      description="Successfully fetched",
@@ -57,13 +71,20 @@ class widget
 	 */
 	public function getAll() : controllerDataResponse {
 		try {
-			$widgets = \app\models\widget::getAll();
+			$filter  = [];
+			$options = [
+				'sort' => []
+			];
+			$limit   = $_GET[ 'limit' ] ?? 10;
+			$page    = $_GET[ 'page' ] ?? 1;
+
+			$dbGetResult = \app\models\widget::getPagedResponse( $limit, $page, $filter, $options );
 		}
 		catch( modelException $e ) {
 			throw new controllerException( $e->getMessage(), $e->getCode(), $e );
 		}
 
-		return new controllerDataResponse( $widgets );
+		return new controllerPagedDataResponse( $dbGetResult );
 	}
 
 
