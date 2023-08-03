@@ -9,7 +9,14 @@
 	{
 	  "default": true,
 	  "database": "",
-	  "uri": ""
+	  "uri": "",
+	  "audit": false,
+	  "include_meta": false,
+	  "include_metaLabels": false,
+	  "include_metaFields": false,
+	  "logging": true,
+	  "auditDatabaseName": "",
+	  "auditDatabaseUri": ""
 	}
   ],
   "appDictionary": {
