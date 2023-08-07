@@ -8,11 +8,6 @@
 	"fromName": "{app_smtp_sendmail_from_name}"
   },
   "settings": {
-	"useSession": false,
-	"enableDocumentationRoute": true,
-	"enableOauthRoutes": false,
-	"enableMicrosoftOnBehalfOfRoutes": false,
-	"enablePasswordAuthRoutes": false,
-	"enableUserRoutes": false
+	"useSession": false
   }
 }
