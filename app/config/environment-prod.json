@@ -21,7 +21,9 @@
   ],
   "jwtAuth": {
     "tokenIssuedBy": "{prod_app_root_url}",
-    "tokenPermittedFor": "{prod_app_root_url}"
+    "tokenPermittedFor": "{prod_app_root_url}",
+	  "redirectAfterLoginUrl": "{prod_app_redirect_after_login}",
+	  "redirectAfterLogoutUrl": "{prod_app_redirect_after_logout}"
   },
   "appDictionary": {
 	"key": "value"
