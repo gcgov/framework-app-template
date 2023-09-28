@@ -1,15 +1,18 @@
 {
-  "name": "gcgov/framework-app-template",
-  "description": "App template repository to scaffold a new application based on gcgov/framework",
-  "require": {
-	"php": ">=8.0",
-	"ext-mongodb": "*",
-	"mongodb/mongodb": "^1.8",
-	"gcgov/framework": "^1.3"
-  },
-  "autoload": {
-	"psr-4": {
-	  "app\\": "app/"
+	"name": "gcgov/framework-app-template",
+	"description": "App template repository to scaffold a new application based on gcgov/framework",
+	"require": {
+		"php": ">=8.0",
+		"ext-mongodb": "*",
+		"mongodb/mongodb": "^1.16",
+		"zircote/swagger-php": "^4.7",
+		"gcgov/framework": "^2.0",
+		"gcgov/framework-service-documentation": "^1.0",
+		"gcgov/framework-service-gcgov-cron-monitor": "^1.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"app\\": "app/"
+		}
 	}
-  }
 }

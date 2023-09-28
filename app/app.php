@@ -34,4 +34,14 @@ final class app implements \gcgov\framework\interfaces\app {
 	}
 
 
+	public function registerFrameworkServiceNamespaces(): array {
+		return [
+			'\gcgov\framework\services\documentation',
+			'\gcgov\framework\services\cronMonitor',
+			//'\gcgov\framework\services\usercrud',
+			//'\gcgov\framework\services\authoauth',
+		];
+	}
+
+
 }
