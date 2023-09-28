@@ -3,7 +3,6 @@
   "serverName": "app.local",
   "rootUrl": "{app_root_url}",
   "basePath": "{app_base_path}",
-  "redirectAfterLoginUrl": "{app_redirect_after_login_url}",
   "phpPath": "{app_php_path}\\php-cgi.exe -c {app_absolute_path}\\srv\\app.local\\php.ini",
   "mongoDatabases": [
 	{
