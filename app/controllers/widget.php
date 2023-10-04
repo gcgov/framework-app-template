@@ -8,14 +8,9 @@ use gcgov\framework\exceptions\modelException;
 use gcgov\framework\interfaces\controller;
 use gcgov\framework\models\controllerDataResponse;
 use gcgov\framework\models\controllerPagedDataResponse;
+use OpenApi\Attributes as OA;
 
-/**
- * Class widget
- * @OA\Tag(
- *     name="widget",
- *     description="Widget object"
- * )
- */
+#[OA\Tag( name: 'Widget' )]
 class widget
 	implements
 	controller {
@@ -37,38 +32,14 @@ class widget
 	public static function _before() : void {
 	}
 
-
-	/**
-	 * @OA\Get(
-	 *     path="/widget/",
-	 *     tags={"Widget"},
-	 *     description="Fetch all widgets",
-	 *     @OA\Parameter(
-	 *         name="limit",
-	 *         in="query",
-	 *         description="How many objects to fetch",
-	 *         required=false,
-	 *         @OA\Schema(type="int")
-	 *     ),
-	 *     @OA\Parameter(
-	 *         name="page",
-	 *         in="query",
-	 *         description="What page of objects to fetch. Defaults to 1 when limit is provided.",
-	 *         required=false,
-	 *         @OA\Schema(type="int")
-	 *     ),
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Successfully fetched",
-	 *      @OA\JsonContent(
-	 *          type="array",
-	 *          @OA\Items(ref="#/components/schemas/widget")
-	 *      )
-	 *    )
-	 * )
-	 * @return \gcgov\framework\models\controllerDataResponse
-	 * @throws \gcgov\framework\exceptions\controllerException
-	 */
+	#[OA\Get( path: '/widget/{_id}', tags: [ 'Widget' ] )]
+	#[OA\Parameter( name: 'limit', description: 'Maximum number of objects to fetch. Defaults to 10 if not provided.', in: 'query', required: false, schema: new OA\Schema( type: 'int' ) )]
+	#[OA\Parameter( name: 'page', description: 'What page of objects to fetch. Defaults to 1 if not provided.', in: 'query', required: false, schema: new OA\Schema( type: 'int' ) )]
+	#[OA\Response(
+		response: 200,
+		description: 'Success',
+		content: new OA\JsonContent( type: \app\models\widget::class )
+	)]
 	public function getAll() : controllerDataResponse {
 		try {
 			$filter  = [];
@@ -88,18 +59,15 @@ class widget
 	}
 
 
+
+	#[OA\Get( path: '/widget/{_id}', tags: [ 'Widget' ] )]
+	#[OA\Parameter( name: 'id', in: 'path', required: true, schema: new OA\Schema( type: 'string' ) )]
+	#[OA\Response(
+		response: 200,
+		description: 'Success',
+		content: new OA\JsonContent( type: \app\models\widget::class )
+	)]
 	/**
-	 * @OA\Get(
-	 *     path="/widget/{_id}",
-	 *     tags={"Widget"},
-	 *      description="Fetch an widget object",
-	 *     @OA\Parameter(in="path", name="_id", required=true, @OA\Schema(type="string")),
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Successfully fetched",
-	 *      @OA\JsonContent(ref="#/components/schemas/widget")
-	 *    )
-	 * )
 	 * @param  string  $_id
 	 *
 	 * @return \gcgov\framework\models\controllerDataResponse
@@ -121,23 +89,20 @@ class widget
 		return new controllerDataResponse( $widget );
 	}
 
+
+	#[OA\Post( path: '/widget/{_id}', tags: [ 'Widget' ] )]
+	#[OA\Parameter( name: 'id', in: 'path', required: true, schema: new OA\Schema( type: 'string' ) )]
+	#[OA\RequestBody(
+		description: 'Create or update object',
+		required: true,
+		content: [ new OA\JsonContent( type: \app\models\widget::class ) ]
+	)]
+	#[OA\Response(
+		response: 200,
+		description: 'Success',
+		content: new OA\JsonContent( type: \app\models\widget::class )
+	)]
 	/**
-	 * @OA\Post(
-	 *     path="/widget/{_id}",
-	 *     tags={"Widget"},
-	 *      description="Create or update an widget object",
-	 *     @OA\Parameter(in="path", name="_id", required=true, @OA\Schema(type="string")),
-	 *     @OA\RequestBody(
-	 *      description="widget object to save",
-	 *      required=true,
-	 *      @OA\JsonContent(ref="#/components/schemas/widget")
-	 *     ),
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Successfully saved",
-	 *      @OA\JsonContent(ref="#/components/schemas/widget")
-	 *    )
-	 * )
 	 * @param  string  $_id
 	 *
 	 * @return \gcgov\framework\models\controllerDataResponse
@@ -158,16 +123,13 @@ class widget
 	}
 
 
+	#[OA\Delete( path: '/widget/{_id}', tags: [ 'Widget' ] )]
+	#[OA\Parameter( name: 'id', in: 'path', required: true, schema: new OA\Schema( type: 'string' ) )]
+	#[OA\Response(
+		response: 204,
+		description: 'Success'
+	)]
 	/**
-	 * @OA\Delete(
-	 *     path="/widget/{_id}",
-	 *     tags={"Widget"},
-	 *     @OA\Parameter(in="path", name="_id", required=true, @OA\Schema(type="string")),
-	 *     @OA\Response(
-	 *      response="204",
-	 *      description="Successfully deleted"
-	 *    )
-	 * )
 	 * @param  string  $_id
 	 *
 	 * @return \gcgov\framework\models\controllerDataResponse

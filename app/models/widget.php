@@ -3,15 +3,12 @@ namespace app\models;
 
 
 use gcgov\framework\services\mongodb\attributes\label;
+use OpenApi\Attributes as OA;
 
 
-/**
- * Class widget
- * @OA\Schema()
- */
-final class widget
-	extends
-	\gcgov\framework\services\mongodb\model {
+
+#[OA\Schema]
+final class widget extends \gcgov\framework\services\mongodb\model {
 
 	const _COLLECTION = 'widget';
 
@@ -20,29 +17,25 @@ final class widget
 	const _HUMAN_PLURAL = 'widgets';
 
 	#[label( 'Id' )]
-	/** @OA\Property(type="string") */
+	#[OA\Property( type: 'string' )]
 	public \MongoDB\BSON\ObjectId $_id;
 
 	#[label( 'Types' )]
-	/**
-	 * @OA\Property()
-	 * @var string[]
-	 */
+	#[OA\Property()]
+	/** @var string[] */
 	public array                  $types       = [];
 
 	#[label( 'Active' )]
-	/** @OA\Property() */
+	#[OA\Property()]
 	public bool                   $active      = true;
 
 	#[label( 'Name' )]
-	/** @OA\Property() */
+	#[OA\Property()]
 	public string                 $name        = '';
 
 	#[label( 'Types List' )]
-	/**
-	 * @OA\Property()
-	 * @var string[]
-	 */
+	#[OA\Property()]
+	/** @var string[] */
 	public array                  $_validTypes = [
 		'toys'     => 'Toys',
 		'vehicles' => 'Vehicles',
