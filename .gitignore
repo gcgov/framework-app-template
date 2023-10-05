@@ -5,3 +5,4 @@ composer.json
 /.idea
 www/web.config
 version.json
+app/config/environment.json
