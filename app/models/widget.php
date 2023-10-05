@@ -2,6 +2,8 @@
 namespace app\models;
 
 
+use gcgov\framework\services\mongodb\attributes\excludeBsonSerialize;
+use gcgov\framework\services\mongodb\attributes\excludeBsonUnserialize;
 use gcgov\framework\services\mongodb\attributes\label;
 use OpenApi\Attributes as OA;
 
@@ -22,7 +24,7 @@ final class widget extends \gcgov\framework\services\mongodb\model {
 
 	#[label( 'Types' )]
 	#[OA\Property()]
-	/** @var string[] */
+	/** @var string[] $types */
 	public array                  $types       = [];
 
 	#[label( 'Active' )]
@@ -34,8 +36,10 @@ final class widget extends \gcgov\framework\services\mongodb\model {
 	public string                 $name        = '';
 
 	#[label( 'Types List' )]
+	#[excludeBsonSerialize]
+	#[excludeBsonUnserialize]
 	#[OA\Property()]
-	/** @var string[] */
+	/** @var string[] $_validTypes */
 	public array                  $_validTypes = [
 		'toys'     => 'Toys',
 		'vehicles' => 'Vehicles',
