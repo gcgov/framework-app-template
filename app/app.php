@@ -3,20 +3,10 @@ namespace app;
 
 
 use gcgov\framework\config;
+use OpenApi\Attributes as OA;
 
-
-/**
- * @OA\Info(
- *     title="{app_title}",
- *     version="1.0.0",
- *     @OA\Contact(
- *          email="{app_smtp_sendmail_from_address}"
- *     )
- * )
- *
- * @OA\Server(url="{app_root_url}{app_base_path}")
- *
- */
+#[OA\Info( version: '1.0.0', title: '{app_title}',contact: new OA\Contact(email:'itstaff@garrettcountymd.gov') )]
+#[OA\Server(url:'{prod_app_root_url}{prod_app_base_path}')]
 final class app implements \gcgov\framework\interfaces\app {
 
 
