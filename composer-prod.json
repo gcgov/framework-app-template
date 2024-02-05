@@ -14,5 +14,8 @@
 		"psr-4": {
 			"app\\": "app/"
 		}
+	},
+	"scripts": {
+		"gcgov-create-jwt-keys": "pwsh -File vendor/gcgov/framework/scripts/create-jwt-keys.ps1"
 	}
 }
