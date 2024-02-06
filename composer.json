@@ -23,9 +23,5 @@
 				"symlink": true
 			}
 		}
-	],
-	"scripts": {
-		"gcgov-setup": "pwsh -File vendor/gcgov/framework/scripts/setup.ps1",
-		"gcgov-create-jwt-keys": "pwsh -File vendor/gcgov/framework/scripts/create-jwt-keys.ps1"
-	}
+	]
 }
