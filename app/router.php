@@ -36,7 +36,7 @@ class router
 		$routes = [];
 
 		//if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, $routePrepend="/api";
-		$routePrepend = '{app_base_path}';
+		$routePrepend = '/{app_base_path}';
 
 		//WIDGETS
 		$routes[] = new route( 'GET', $routePrepend.'widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );
