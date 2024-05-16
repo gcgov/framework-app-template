@@ -1,44 +1,44 @@
 {
-  "type": "prod",
-  "serverName": "app.prod",
-  "rootUrl": "{prod_app_root_url}",
-  "basePath": "{prod_app_base_path}",
-  "phpPath": "{prod_app_php_path}\\php-cgi.exe -c {prod_app_absolute_path}\\srv\\app.prod\\php.ini",
-  "mongoDatabases": [
-	{
-	  "default": true,
-	  "database": "",
-	  "uri": "",
-	  "audit": false,
-	  "include_meta": false,
-	  "include_metaLabels": false,
-	  "include_metaFields": false,
-	  "logging": true,
-	  "auditDatabaseName": "",
-	  "auditDatabaseUri": ""
+	"type": "prod",
+	"serverName": "app.prod",
+	"rootUrl": "{prod_app_root_url}",
+	"basePath": "{prod_app_base_path}",
+	"phpPath": "{prod_app_php_path}\\php-cgi.exe -c {prod_app_absolute_path}\\srv\\app.prod\\php.ini",
+	"mongoDatabases": [
+		{
+			"default": true,
+			"database": "",
+			"uri": "",
+			"audit": false,
+			"include_meta": false,
+			"include_metaLabels": false,
+			"include_metaFields": false,
+			"logging": true,
+			"auditDatabaseName": "",
+			"auditDatabaseUri": ""
+		}
+	],
+	"jwtAuth": {
+		"tokenIssuedBy": "{prod_app_root_url}",
+		"tokenPermittedFor": "{prod_app_base_path}",
+		"redirectAfterLoginUrl": "{prod_app_redirect_after_login}",
+		"redirectAfterLogoutUrl": "{prod_app_redirect_after_logout}"
+	},
+	"appDictionary": {
+		"key": "value"
+	},
+	"microsoft": {
+		"clientId": "{prod_app_microsoft_client_id}",
+		"clientSecret": "{prod_app_microsoft_client_secret}",
+		"tenant": "{prod_app_microsoft_tenant}",
+		"driveId": "{prod_app_microsoft_drive_id}",
+		"fromAddress": "{prod_app_microsoft_default_from_address}"
+	},
+	"payjunction": {
+		"username": "{prod_app_payjunction_username}",
+		"password": "{prod_app_payjunction_password}",
+		"apiKey": "{prod_app_payjunction_api_key}",
+		"terminalId": "{prod_app_payjunction_terminal_id}",
+		"merchantId": "{prod_app_payjunction_merchant_id}"
 	}
-  ],
-  "jwtAuth": {
-    "tokenIssuedBy": "{prod_app_root_url}",
-    "tokenPermittedFor": "{prod_app_root_url}",
-	  "redirectAfterLoginUrl": "{prod_app_redirect_after_login}",
-	  "redirectAfterLogoutUrl": "{prod_app_redirect_after_logout}"
-  },
-  "appDictionary": {
-	"key": "value"
-  },
-  "microsoft": {
-	"clientId": "{prod_app_microsoft_client_id}",
-	"clientSecret": "{prod_app_microsoft_client_secret}",
-	"tenant": "{prod_app_microsoft_tenant}",
-	"driveId": "{prod_app_microsoft_drive_id}",
-	"fromAddress": "{prod_app_microsoft_default_from_address}"
-  },
-  "payjunction": {
-	"username": "{prod_app_payjunction_username}",
-	"password": "{prod_app_payjunction_password}",
-	"apiKey": "{prod_app_payjunction_api_key}",
-	"terminalId": "{prod_app_payjunction_terminal_id}",
-	"merchantId": "{prod_app_payjunction_merchant_id}"
-  }
 }
