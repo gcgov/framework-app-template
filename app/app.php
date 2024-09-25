@@ -28,12 +28,14 @@ final class app implements \gcgov\framework\interfaces\app {
 		//uncomment to auto create new user entries if the user does not have one in the user collection
 		//$msAuthConfig = \gcgov\framework\services\authmsfront\msAuthConfig::getInstance();
 		//$msAuthConfig->setBlockNewUsers( false, constants::DEFAULT_ROLES );
-
+		//$oauthConfig = \gcgov\framework\services\authoauth\oauthConfig::getInstance();
+		//$oauthConfig->setBlockNewUsers( false, constants::DEFAULT_ROLES );
 		return [
 			'\gcgov\framework\services\documentation',
 			'\gcgov\framework\services\cronMonitor',
 			'\gcgov\framework\services\usercrud',
-			'\gcgov\framework\services\authmsfront',
+			//'\gcgov\framework\services\authmsfront',
+			'\gcgov\framework\services\authoauth',
 		];
 	}
 
