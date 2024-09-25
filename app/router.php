@@ -68,10 +68,15 @@ class router
 		//    it automatically adds our authentication guard
 
 		//we can add additional, custom authentication checks here that will run prior to authoauth
-		//    to skip \gcgov\framework\services\authoauth authentication method for this request, set
+		//
+		//  if the user fails authentication, throw a routeException with a description of why authentication failed
+		//    throw new \gcgov\framework\exceptions\routeException( 'Authentication failed because XYZ', 401 );
+		//
+		//  to skip \gcgov\framework\services\authoauth authentication method for this request, set
 		//    $this->runFrameworkServiceRouteAuthentication = false and add method
 		//     getRunFrameworkServiceRouteAuthentication(): bool -- see below
 
+		//user has been authenticated
 		return true;
 	}
 
