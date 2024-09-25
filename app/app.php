@@ -25,11 +25,15 @@ final class app implements \gcgov\framework\interfaces\app {
 
 
 	public function registerFrameworkServiceNamespaces(): array {
+		//uncomment to auto create new user entries if the user does not have one in the user collection
+		//$msAuthConfig = \gcgov\framework\services\authmsfront\msAuthConfig::getInstance();
+		//$msAuthConfig->setBlockNewUsers( false, constants::DEFAULT_ROLES );
+
 		return [
 			'\gcgov\framework\services\documentation',
 			'\gcgov\framework\services\cronMonitor',
-			//'\gcgov\framework\services\usercrud',
-			//'\gcgov\framework\services\authoauth',
+			'\gcgov\framework\services\usercrud',
+			'\gcgov\framework\services\authmsfront',
 		];
 	}
 
