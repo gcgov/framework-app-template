@@ -62,19 +62,22 @@ class router
 	 * @throws \gcgov\framework\exceptions\routeException
 	 */
 	public function authentication( \gcgov\framework\models\routeHandler $routeHandler ) : bool {
+		//check if user is authenticated - true if they are, false if not
 
+		//we are utilizing the \gcgov\framework\services\authoauth service
+		//    it automatically adds our authentication guard
 
-		//check if user is authenticated
+		//we can add additional, custom authentication checks here that will run prior to authoauth
+		//    to skip \gcgov\framework\services\authoauth authentication method for this request, set
+		//    $this->runFrameworkServiceRouteAuthentication = false and add method
+		//     getRunFrameworkServiceRouteAuthentication(): bool -- see below
 
-		//if user is not authenticated, throw a routeException with a message clearly stating why authentication failed
-		//throw new \gcgov\framework\exceptions\routeException( 'Missing Authorization', 401 );
-
-		//to validate route roles, compare user roles with the route roles in $routeHandler->requiredRoles
-		//$routeHandler->requiredRoles
-
-
-		//user has been authenticated
 		return true;
 	}
 
+	// To disable the authoauth for a specific request, set $this->runFrameworkServiceRouteAuthentication to false during authentication() method
+	//    private bool $runFrameworkServiceRouteAuthentication = true;
+	//    public function getRunFrameworkServiceRouteAuthentication(): bool {
+	//	      return $this->runFrameworkServiceRouteAuthentication;
+	//    }
 }
