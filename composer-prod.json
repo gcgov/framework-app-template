@@ -4,18 +4,17 @@
 	"require": {
 		"php": ">=8.0",
 		"ext-mongodb": "*",
-		"mongodb/mongodb": "^1.16",
+		"mongodb/mongodb": "^1.19",
 		"zircote/swagger-php": "^4.7",
-		"gcgov/framework": "^2.0",
+		"gcgov/framework": "^4.0",
+		"gcgov/framework-service-gcgov-cron-monitor": "^1.0",
 		"gcgov/framework-service-documentation": "^1.0",
-		"gcgov/framework-service-gcgov-cron-monitor": "^1.0"
+		"gcgov/framework-service-auth-oauth-server": "^1.0",
+		"gcgov/framework-service-user-crud": "^1.0"
 	},
 	"autoload": {
 		"psr-4": {
 			"app\\": "app/"
 		}
-	},
-	"scripts": {
-		"gcgov-create-jwt-keys": "pwsh -File vendor/gcgov/framework/scripts/create-jwt-keys.ps1"
 	}
 }

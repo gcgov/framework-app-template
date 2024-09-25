@@ -2,13 +2,16 @@
 	"name": "gcgov/framework-app-template",
 	"description": "App template repository to scaffold a new application based on gcgov/framework",
 	"require": {
-		"php": ">=8.0",
+		"php": ">=8.2",
 		"ext-mongodb": "*",
-		"mongodb/mongodb": "^1.8",
+		"mongodb/mongodb": "^1.16",
+		"phpmailer/phpmailer": "^6.2",
 		"zircote/swagger-php": "^4.7",
 		"gcgov/framework": "dev-main",
+		"gcgov/framework-service-gcgov-cron-monitor": "^1.0",
 		"gcgov/framework-service-documentation": "^1.0",
-		"gcgov/framework-service-gcgov-cron-monitor": "^1.0"
+		"gcgov/framework-service-auth-oauth-server": "^1.0",
+		"gcgov/framework-service-user-crud": "^1.0"
 	},
 	"repositories": [
 		{
