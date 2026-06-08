@@ -1,5 +1,5 @@
 parameters:
-	level: 0
+	level: 5
 	# Analysis runs against composer-ci.json (copied to composer.json by CI),
 	# which pins the framework and sibling services to local path repos so the
 	# Windows-only production composer.json path repository can stay untouched.
