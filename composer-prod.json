@@ -1,16 +1,17 @@
 {
 	"name": "gcgov/framework-app-template",
-	"description": "App template repository to scaffold a new application based on gcgov/framework",
+	"description": "App template repository to scaffold a new application based on gcgov/framework. CI variant that resolves the framework and sibling services from local paths instead of the production Windows path.",
 	"require": {
-		"php": ">=8.0",
+		"php": ">=8.2",
 		"ext-mongodb": "*",
-		"mongodb/mongodb": "^1.19",
-		"zircote/swagger-php": "^4.7",
-		"gcgov/framework": "^4.0",
-		"gcgov/framework-service-gcgov-cron-monitor": "^1.0",
-		"gcgov/framework-service-documentation": "^1.0",
-		"gcgov/framework-service-auth-oauth-server": "^1.0",
-		"gcgov/framework-service-user-crud": "^1.0"
+		"mongodb/mongodb": "^2.1",
+		"phpmailer/phpmailer": "^6.2",
+		"zircote/swagger-php": "^6.1",
+		"gcgov/framework": "^v6.1",
+		"gcgov/framework-service-gcgov-cron-monitor": "^v1.1",
+		"gcgov/framework-service-documentation": "^1.1",
+		"gcgov/framework-service-auth-oauth-server": "^2.1",
+		"gcgov/framework-service-user-crud": "^1.1"
 	},
 	"autoload": {
 		"psr-4": {
