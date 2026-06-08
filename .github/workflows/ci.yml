@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  phpstan:
+    name: PHPStan (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out sibling repositories required by composer-ci.json
+        uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework
+          ref: main
+          path: ../framework
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-gcgov-cron-monitor
+          ref: main
+          path: ../framework-service-gcgov-cron-monitor
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-documentation
+          ref: main
+          path: ../framework-service-documentation
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-auth-oauth-server
+          ref: main
+          path: ../framework-service-auth-oauth-server
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-user-crud
+          ref: main
+          path: ../framework-service-user-crud
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mongodb, sodium, fileinfo, pdo, imagick
+          tools: composer:v2
+          coverage: none
+      - name: Swap composer.json for CI variant
+        run: cp composer-ci.json composer.json
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Run PHPStan
+        run: composer phpstan
+
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework
+          ref: main
+          path: ../framework
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-gcgov-cron-monitor
+          ref: main
+          path: ../framework-service-gcgov-cron-monitor
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-documentation
+          ref: main
+          path: ../framework-service-documentation
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-auth-oauth-server
+          ref: main
+          path: ../framework-service-auth-oauth-server
+      - uses: actions/checkout@v4
+        with:
+          repository: gcgov/framework-service-user-crud
+          ref: main
+          path: ../framework-service-user-crud
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mongodb, sodium, fileinfo, pdo, imagick
+          tools: composer:v2
+          coverage: none
+      - name: Swap composer.json for CI variant
+        run: cp composer-ci.json composer.json
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Run PHPUnit
+        run: composer test

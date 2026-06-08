@@ -6,3 +6,6 @@ composer.json
 www/web.config
 version.json
 app/config/environment.json
+.phpunit.cache/
+.phpunit.result.cache
+.phpstan-cache/
