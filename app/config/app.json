@@ -5,7 +5,9 @@
   },
   "email": {
 	"fromAddress": "{app_smtp_sendmail_from_address}",
-	"fromName": "{app_smtp_sendmail_from_name}"
+	"fromName": "{app_smtp_sendmail_from_name}",
+	"SMTPUsername": "%env(default::SMTP_USERNAME)%",
+	"SMTPPassword": "%env(default::SMTP_PASSWORD)%"
   },
   "settings": {
 	"useSession": false

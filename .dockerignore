@@ -1,0 +1,16 @@
+.git
+.github
+vendor
+node_modules
+.env
+.env.local
+secrets
+*.md
+.idea
+.phpunit.cache
+.phpunit.result.cache
+.phpstan-cache
+srv/tmp/**/*
+srv/profile/*
+logs/*
+!**/.gitignore

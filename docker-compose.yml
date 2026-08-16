@@ -1,0 +1,50 @@
+# Local development stack: Nginx + PHP-FPM (+ optional MongoDB).
+#
+#   cp .env.example .env
+#   docker compose --profile dev up --build     # starts php, nginx and mongodb
+#   open http://localhost:8080
+#
+# Without `--profile dev`, mongodb is not started — point MONGO_URI at an
+# external database instead. Secrets come from .env / the environment; never
+# put real secret values in this file (see DOCKER.md).
+
+services:
+  php:
+    build:
+      context: .
+      target: dev
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/app
+      # keep the image-built vendor/ from being shadowed by the bind mount
+      - /var/www/app/vendor
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - php
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - .:/var/www/app:ro
+    environment:
+      PHP_FPM_HOST: "${PHP_FPM_HOST:-php:9000}"
+      CORS_ORIGIN_APP: "${CORS_ORIGIN_APP:-http://localhost:8080}"
+      CORS_ORIGIN_FRONTEND: "${CORS_ORIGIN_FRONTEND:-http://localhost:5173}"
+      CORS_ORIGIN_SWAGGER: "${CORS_ORIGIN_SWAGGER:-http://localhost:8081}"
+      # Only substitute our own variables; leave nginx's $variables intact.
+      NGINX_ENVSUBST_FILTER: "^(CORS_ORIGIN_|PHP_FPM_HOST)"
+
+  mongodb:
+    image: mongo:7
+    profiles:
+      - dev
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

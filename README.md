@@ -1,75 +1,48 @@
 # Framework App Template
 
 App template repository to scaffold a new [gcgov/framework](https://github.com/gcgov/framework)
+application. It runs in Docker (Nginx + PHP-FPM) and keeps secrets out of the config files by
+resolving them from environment variables / Docker secrets via the framework's `%env(...)%`
+syntax.
 
-## Instructions
+## Getting started
 
-1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a new repository for your
-   app
-1. Replace app variables across configuration files:
-    - Variables to replace:
-        - `{app_guid}` -> unique guid (generate from https://www.guidgenerator.com/)
-        - `{app_title}` -> human-readable title of app
-        - `{app_root_url}` -> root url of app (ex: https://signatures.garrettcounty.local)
-        - `{app_base_path}` -> base url of app (ex: /api/, Or: / if site is at url root)
-        - `{app_relative_url}` -> if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, replace with "/api" 
-        - `{app_redirect_after_login}` -> if appConfig.enableAuthRoutes==true, user will be redirected to this url after successful login
-        - `{app_redirect_after_logout}` -> if appConfig.enableAuthRoutes==true, user will be redirected to this url after successful login
-        - `{app_absolute_path}` -> absolute path to app root directory
-        - `{app_php_path}` -> absolute path to the PHP executable root directory
-        - `{app_smtp_server}` -> smtp server address
-        - `{app_smtp_sendmail_from_address}` -> default email address to send emails from
-        - `{app_smtp_sendmail_from_name}` -> default human-readable name that will appear as the sender of emails
-        - `{app_ssl_path}` -> absolute path to a current cacert.pem file for CURL and OpenSSL extensions
-            - Global cacert.pem is available from Mozilla at https://curl.se/docs/caextract.html
-            - Use behind a firewall with SSL decryption will require appending private
-        - Microsoft Services
-          - `{app_microsoft_client_id}` -> Microsoft Azure App client id
-          - `{app_microsoft_client_secret}` -> Microsoft Azure App client secret
-          - `{app_microsoft_tenant}` -> Microsoft App tenant
-          - `{app_microsoft_drive_id}` -> Sharepoint Drive Id (if using files integration)
-          - `{app_microsoft_default_from_address}` -> Default from email address (if using Graph API Mail.Send)
-        - Payjunction Services
-          - `{app_payjunction_username}` -> PayJunction API Username
-          - `{app_payjunction_password}` -> PayJunction API Password
-          - `{app_payjunction_api_key}` -> PayJunction API Key
-          - `{app_payjunction_terminal_id}` -> PayJunction Smart Terminal Id - optional
-          - `{app_payjunction_merchant_id}` -> PayJunction Smart Terminal Merchant Id - optional but required if using smart terminal
-    - **Production Variables**:
-        - `{prod_app_root_url}`
-        - `{prod_app_base_path}`
-        - `{prod_app_redirect_after_login}`
-        - `{prod_app_redirect_after_logout}`
-        - `{prod_app_absolute_path}`
-        - `{prod_app_php_path}`
-        - `{prod_app_ssl_path}`
-        - Microsoft Services
-            - `{prod_app_microsoft_client_id}`
-            - `{prod_app_microsoft_client_secret}`
-            - `{prod_app_microsoft_tenant}`
-            - `{prod_app_microsoft_drive_id}`
-            - `{prod_app_microsoft_default_from_address}`
-      - Payjunction Services
-          - `{prod_app_payjunction_username}`
-          - `{prod_app_payjunction_password}`
-          - `{prod_app_payjunction_api_key}`
-          - `{prod_app_payjunction_terminal_id}`
-          - `{prod_app_payjunction_merchant_id}`
-    - Files to replace variables in:
-        - `/srv/app.local/php.ini`
-        - `/srv/app.local-cli/php.ini`
-        - `/srv/app.prod/php.ini`
-        - `/srv/app.prod-cli/php.ini`
-        - `/app/config/app.json`
-        - `/app/config/environment.json`
-        - `/app/cli/local.bat`
-        - `/app/cli/local-debug.bat`
-        - `/app/cli/prod.bat`
-1. Move `/composer-local.json` to `/composer.json`
-1. Move `/app/config/environment-local.json` to `/app/config/environment.json`
-1. Move `/www/web-local.config` to `/www/web.config`
-1. Configure web server
-   - Root directory must map to `/www/`
-   - PHP instance must use `/srv/app.local/php.ini` for configuration
-1. Test widget module.
-1. Create your models, controllers, and services!
+1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a
+   new repository for your app.
+2. Scaffold the identity/URL placeholders. `gf setup` replaces the `{app_*}` and `{prod_app_*}`
+   tokens across the config, nginx, and compose files:
+   ```bash
+   composer install
+   vendor/bin/gf setup
+   ```
+   Tokens you provide include: `{app_guid}` (generate at https://www.guidgenerator.com/),
+   `{app_title}`, `{app_root_url}`, `{app_base_path}`, `{app_redirect_after_login}`,
+   `{app_redirect_after_logout}`, the `{app_microsoft_*}` client id/tenant/drive id, and the
+   matching `{prod_app_*}` values for production.
+3. Provide secrets as **environment variables**, not tokens. The config files reference them with
+   `%env(...)%` — for example `environment-prod.json` has
+   `"uri": "%env(MONGO_URI)%"` and `"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%"`. Copy
+   `.env.example` to `.env` and fill it in for local development; use Docker/Kubernetes secrets in
+   production. See **[DOCKER.md](DOCKER.md)** and the framework's
+   [environment-variables guide](https://github.com/gcgov/framework/blob/main/readme/environment-variables.md).
+4. Activate an environment: `vendor/bin/gf env local` (or `gf env prod`) copies the matching
+   `environment-{name}.json` into place.
+5. Run it:
+   ```bash
+   cp .env.example .env
+   docker compose --profile dev up --build
+   # → http://localhost:8080
+   ```
+6. Test the `widget` module, then create your own models, controllers, and services.
+
+## Documentation
+
+- **[DOCKER.md](DOCKER.md)** — running in Docker, and how to set environment variables securely
+  (Docker/Swarm/Kubernetes secrets, TLS at the edge, the CLI).
+- The `gf` CLI: `vendor/bin/gf` (`gf setup`, `gf env`, `gf cli`, `gf db:*`, …).
+
+## Local development without Docker
+
+You can still run the app under any PHP 8.3+ SAPI with `ext-mongodb`. Point the web root at
+`/www/`, resolve config secrets through your shell environment or a `.env` file at the project
+root, and use `vendor/bin/gf` for CLI tasks. The Docker stack is the supported, reproducible path.

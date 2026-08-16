@@ -21,8 +21,10 @@ jobs:
       - name: Check out sibling repositories required by composer-ci.json
         uses: actions/checkout@v4
         with:
+          # Framework points at the Docker-support branch until it is tagged/merged
+          # to main. Revert this ref to `main` (or the release tag) afterwards.
           repository: gcgov/framework
-          ref: main
+          ref: claude/docker-gcgov-framework-tphme2
           path: ../framework
       - uses: actions/checkout@v4
         with:
@@ -51,7 +53,11 @@ jobs:
           tools: composer:v2
           coverage: none
       - name: Swap composer.json for CI variant
-        run: cp composer-ci.json composer.json
+        run: |
+          cp composer-ci.json composer.json
+          # The committed composer.lock is for Packagist/Docker builds; path-repo
+          # resolution against the sibling checkouts must not reuse it.
+          rm -f composer.lock
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
       - name: Run PHPStan
@@ -68,8 +74,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
+          # Framework points at the Docker-support branch until it is tagged/merged
+          # to main. Revert this ref to `main` (or the release tag) afterwards.
           repository: gcgov/framework
-          ref: main
+          ref: claude/docker-gcgov-framework-tphme2
           path: ../framework
       - uses: actions/checkout@v4
         with:
@@ -98,8 +106,40 @@ jobs:
           tools: composer:v2
           coverage: none
       - name: Swap composer.json for CI variant
-        run: cp composer-ci.json composer.json
+        run: |
+          cp composer-ci.json composer.json
+          # The committed composer.lock is for Packagist/Docker builds; path-repo
+          # resolution against the sibling checkouts must not reuse it.
+          rm -f composer.lock
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
       - name: Run PHPUnit
         run: composer test
+
+  nginx:
+    name: Nginx config lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render the template and validate nginx config
+        run: |
+          docker run --rm \
+            -e PHP_FPM_HOST=php:9000 \
+            -e CORS_ORIGIN_APP=http://localhost:8080 \
+            -e CORS_ORIGIN_FRONTEND=http://localhost:5173 \
+            -e CORS_ORIGIN_SWAGGER=http://localhost:8081 \
+            -e NGINX_ENVSUBST_FILTER='^(CORS_ORIGIN_|PHP_FPM_HOST)' \
+            -v "$PWD/docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro" \
+            nginx:1.27-alpine \
+            sh -c 'set -e; /docker-entrypoint.sh nginx -t'
+
+  docker-build:
+    name: Docker build (prod target)
+    runs-on: ubuntu-latest
+    # Best effort: requires the framework release carrying the %env() resolver to
+    # be published to Packagist (see composer.json). Allowed to fail until then.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build --target prod -t framework-app-template:ci .

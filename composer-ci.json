@@ -7,7 +7,7 @@
 		"mongodb/mongodb": "^2.1",
 		"phpmailer/phpmailer": "^6.2",
 		"zircote/swagger-php": "^6.1",
-		"gcgov/framework": "dev-claude/trusting-ptolemy-TFTfV",
+		"gcgov/framework": "dev-claude/docker-gcgov-framework-tphme2",
 		"gcgov/framework-service-gcgov-cron-monitor": "dev-claude/trusting-ptolemy-TFTfV",
 		"gcgov/framework-service-documentation": "dev-claude/trusting-ptolemy-TFTfV",
 		"gcgov/framework-service-auth-oauth-server": "dev-claude/trusting-ptolemy-TFTfV",

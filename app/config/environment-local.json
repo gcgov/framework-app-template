@@ -3,12 +3,12 @@
   "serverName": "app.local",
   "rootUrl": "{app_root_url}",
   "basePath": "{app_base_path}",
-  "phpPath": "{app_php_path}\\php-cgi.exe -c {app_absolute_path}\\srv\\app.local\\php.ini",
+  "phpPath": "",
   "mongoDatabases": [
 	{
 	  "default": true,
-	  "database": "",
-	  "uri": "",
+	  "database": "%env(default:app:MONGO_DATABASE)%",
+	  "uri": "%env(default:mongodb://mongodb:27017:MONGO_URI)%",
 	  "audit": false,
 	  "include_meta": false,
 	  "include_metaLabels": false,
@@ -29,15 +29,15 @@
   },
   "microsoft": {
 	"clientId": "{app_microsoft_client_id}",
-	"clientSecret": "{app_microsoft_client_secret}",
+	"clientSecret": "%env(default::MICROSOFT_CLIENT_SECRET)%",
 	"tenant": "{app_microsoft_tenant}",
 	"driveId": "{app_microsoft_drive_id}",
 	"fromAddress": "{app_microsoft_default_from_address}"
   },
   "payjunction": {
 	"username": "{app_payjunction_username}",
-	"password": "{app_payjunction_password}",
-	"apiKey": "{app_payjunction_api_key}",
+	"password": "%env(default::PAYJUNCTION_PASSWORD)%",
+	"apiKey": "%env(default::PAYJUNCTION_API_KEY)%",
 	"terminalId": "{app_payjunction_terminal_id}",
 	"merchantId": "{app_payjunction_merchant_id}"
   }

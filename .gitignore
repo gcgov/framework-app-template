@@ -1,11 +1,14 @@
 composer.phar
 /vendor/
-composer.lock
-composer.json
 /.idea
-www/web.config
 version.json
 app/config/environment.json
+
+# Local secrets — never commit real values (see DOCKER.md)
+.env
+.env.local
+/secrets/
+
 .phpunit.cache/
 .phpunit.result.cache
 .phpstan-cache/

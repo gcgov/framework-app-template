@@ -1,1 +1,0 @@
-"{app_php_path}\php.exe" -c "{app_absolute_path}\srv\app.local-cli\php.ini" -f "{app_absolute_path}\app\cli\index.php" %1
