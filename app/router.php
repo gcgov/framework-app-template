@@ -35,17 +35,18 @@ class router
 		/** @var \gcgov\framework\models\route[] $routes */
 		$routes = [];
 
-		//if your app will not run at the root of the domain, add the relative url to the app: ie: if your site will serve from http://example.com/api, $routePrepend="/api";
-		$routePrepend = '/{app_base_path}';
+		//the base path comes from environment.json (env var APP_BASE_PATH), so it can differ per
+		//environment with no code change; getBasePath() returns '/api' style ('/' at domain root)
+		$routePrepend = rtrim( \gcgov\framework\config::getEnvironmentConfig()->getBasePath(), '/' );
 
 		//WIDGETS
-		$routes[] = new route( 'GET', $routePrepend.'widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );
-		$routes[] = new route( 'GET', $routePrepend.'widgets/{_id}', '\app\controllers\widget', 'getOne', true, [ 'Widget.Read' ] );
-		$routes[] = new route( 'POST', $routePrepend.'widgets/{_id}', '\app\controllers\widget', 'save', true, [ 'Widget.Read', 'Widget.Write' ] );
-		$routes[] = new route( 'DELETE', $routePrepend.'widgets/{_id}', '\app\controllers\widget', 'delete', true, [ 'Widget.Read', 'Widget.Write' ] );
+		$routes[] = new route( 'GET', $routePrepend.'/widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );
+		$routes[] = new route( 'GET', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'getOne', true, [ 'Widget.Read' ] );
+		$routes[] = new route( 'POST', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'save', true, [ 'Widget.Read', 'Widget.Write' ] );
+		$routes[] = new route( 'DELETE', $routePrepend.'/widgets/{_id}', '\app\controllers\widget', 'delete', true, [ 'Widget.Read', 'Widget.Write' ] );
 
 		//CLI example
-		//to run in command line: `/app/cli/local.bat /cli/widgets`
+		//to run in command line: `vendor/bin/gf cli /cli/widgets`
 		$routes[] = new route( 'CLI', '/cli/widgets', '\app\controllers\widget', 'getAll', false );
 
 		return $routes;

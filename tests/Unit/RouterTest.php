@@ -29,9 +29,11 @@ final class RouterTest extends TestCase {
 	}
 
 	public function testWidgetGetAllRoute(): void {
+		// tests/bootstrap.php seeds environmentConfig with basePath 'api', so the
+		// runtime-derived route prefix is '/api'
 		$routes = ( new router() )->getRoutes();
 		$this->assertSame( 'GET', $routes[0]->httpMethod );
-		$this->assertSame( '/{app_base_path}widgets', $routes[0]->route );
+		$this->assertSame( '/api/widgets', $routes[0]->route );
 		$this->assertSame( 'getAll', $routes[0]->method );
 		$this->assertTrue( $routes[0]->authentication );
 		$this->assertSame( [ 'Widget.Read' ], $routes[0]->requiredRoles );
@@ -40,7 +42,7 @@ final class RouterTest extends TestCase {
 	public function testWidgetGetOneRoute(): void {
 		$routes = ( new router() )->getRoutes();
 		$this->assertSame( 'GET', $routes[1]->httpMethod );
-		$this->assertSame( '/{app_base_path}widgets/{_id}', $routes[1]->route );
+		$this->assertSame( '/api/widgets/{_id}', $routes[1]->route );
 		$this->assertSame( 'getOne', $routes[1]->method );
 	}
 

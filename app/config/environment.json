@@ -1,0 +1,44 @@
+{
+	"type": "%env(default:local:APP_TYPE)%",
+	"serverName": "%env(default:app.local:APP_SERVER_NAME)%",
+	"rootUrl": "%env(default:{app_root_url}:APP_ROOT_URL)%",
+	"basePath": "%env(default:{app_base_path}:APP_BASE_PATH)%",
+	"phpPath": "",
+	"mongoDatabases": [
+		{
+			"default": true,
+			"database": "%env(MONGO_DATABASE)%",
+			"uri": "%env(MONGO_URI)%",
+			"audit": false,
+			"include_meta": false,
+			"include_metaLabels": false,
+			"include_metaFields": false,
+			"logging": true,
+			"auditDatabaseName": "",
+			"auditDatabaseUri": ""
+		}
+	],
+	"jwtAuth": {
+		"tokenIssuedBy": "%env(default:{app_root_url}:APP_ROOT_URL)%",
+		"tokenPermittedFor": "%env(default:{app_base_path}:APP_BASE_PATH)%",
+		"redirectAfterLoginUrl": "%env(default:{app_redirect_after_login}:APP_REDIRECT_AFTER_LOGIN)%",
+		"redirectAfterLogoutUrl": "%env(default:{app_redirect_after_logout}:APP_REDIRECT_AFTER_LOGOUT)%"
+	},
+	"appDictionary": {
+		"key": "value"
+	},
+	"microsoft": {
+		"clientId": "%env(default:{app_microsoft_client_id}:MICROSOFT_CLIENT_ID)%",
+		"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%",
+		"tenant": "%env(default:{app_microsoft_tenant}:MICROSOFT_TENANT)%",
+		"driveId": "%env(default:{app_microsoft_drive_id}:MICROSOFT_DRIVE_ID)%",
+		"fromAddress": "%env(default:{app_microsoft_default_from_address}:MICROSOFT_FROM_ADDRESS)%"
+	},
+	"payjunction": {
+		"username": "%env(default:{app_payjunction_username}:PAYJUNCTION_USERNAME)%",
+		"password": "%env(PAYJUNCTION_PASSWORD)%",
+		"apiKey": "%env(PAYJUNCTION_API_KEY)%",
+		"terminalId": "%env(default:{app_payjunction_terminal_id}:PAYJUNCTION_TERMINAL_ID)%",
+		"merchantId": "%env(default:{app_payjunction_merchant_id}:PAYJUNCTION_MERCHANT_ID)%"
+	}
+}

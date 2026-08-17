@@ -19,21 +19,28 @@ syntax.
    `{app_title}`, `{app_root_url}`, `{app_base_path}`, `{app_redirect_after_login}`,
    `{app_redirect_after_logout}`, the `{app_microsoft_*}` client id/tenant/drive id, and the
    matching `{prod_app_*}` values for production.
-3. Provide secrets as **environment variables**, not tokens. The config files reference them with
-   `%env(...)%` — for example `environment-prod.json` has
-   `"uri": "%env(MONGO_URI)%"` and `"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%"`. Copy
-   `.env.example` to `.env` and fill it in for local development; use Docker/Kubernetes secrets in
-   production. See **[DOCKER.md](DOCKER.md)** and the framework's
+3. Provide secrets and per-environment values as **environment variables**, not tokens. The
+   committed `app/config/environment.json` references them with `%env(...)%` — e.g.
+   `"uri": "%env(MONGO_URI)%"`, `"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%"`,
+   `"basePath": "%env(default:...:APP_BASE_PATH)%"`. Whichever values the process environment
+   supplies *are* the environment — there is nothing to activate. Copy `.env.example` to `.env`
+   for local development; use container env / Docker/Kubernetes secrets in production. See
+   **[DOCKER.md](DOCKER.md)** and the framework's
    [environment-variables guide](https://github.com/gcgov/framework/blob/main/readme/environment-variables.md).
-4. Activate an environment: `vendor/bin/gf env local` (or `gf env prod`) copies the matching
-   `environment-{name}.json` into place.
-5. Run it:
+4. Run it:
    ```bash
    cp .env.example .env
    docker compose --profile dev up --build
    # → http://localhost:8080
    ```
-6. Test the `widget` module, then create your own models, controllers, and services.
+5. Test the `widget` module, then create your own models, controllers, and services.
+
+### Working with production data
+
+Copy `app/config/prod.env.example` to `app/config/prod.env` (gitignored) and fill in the prod
+values; validate it with `vendor/bin/gf env prod`. Then `gf db:restore --from=prod` and
+`gf db:run --env=prod` resolve `environment.json` with that overlay — no prod config file ever
+lives in the repo.
 
 ## Documentation
 

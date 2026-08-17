@@ -143,3 +143,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build the production image
         run: docker build --target prod -t framework-app-template:ci .
+      - name: Image contains the committed environment.json
+        run: docker run --rm --entrypoint test framework-app-template:ci -f app/config/environment.json

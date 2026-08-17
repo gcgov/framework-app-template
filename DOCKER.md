@@ -19,8 +19,8 @@ docker compose --profile dev up --build
 # → API on http://localhost:8080
 ```
 
-The `dev` profile also starts a throwaway MongoDB at `mongodb:27017`, which the default
-`environment-local.json` points at (`%env(default:mongodb://mongodb:27017:MONGO_URI)%`).
+The `dev` profile also starts a throwaway MongoDB at `mongodb:27017`, which `.env.example`'s
+`MONGO_URI` points at.
 
 Run framework CLI routes and tooling inside the PHP container:
 
@@ -31,9 +31,22 @@ docker compose exec php composer ci
 ```
 
 Before first run you still scaffold the identity/URL placeholders with `gf setup` (it replaces
-the `{app_*}` / `{prod_app_*}` tokens in the config, nginx, and compose files). Environment
-selection is unchanged: `gf env local` / `gf env prod` copy the matching
-`environment-{name}.json` into place.
+the `{app_*}` tokens in the config, nginx, and compose files — they become the baked
+`default:` fallbacks inside `environment.json`'s `%env(...)%` references).
+
+**Environment selection is the environment itself.** The committed
+`app/config/environment.json` is the only config file; the variable values the container is
+given decide whether it behaves as local, prod, or anything else. `gf env` validates that
+resolution (`gf env` for the active environment, `gf env prod` for the
+`app/config/prod.env` overlay used by `gf db:*` commands).
+
+### Production configuration checklist
+
+A prod container must supply (hard `%env()` references — missing ones fail loudly naming the
+variable): `MONGO_URI`, `MONGO_DATABASE`, `MICROSOFT_CLIENT_SECRET`, `PAYJUNCTION_PASSWORD`,
+`PAYJUNCTION_API_KEY` — plus the identity overrides `APP_TYPE=prod`, `APP_SERVER_NAME`,
+`APP_ROOT_URL`, `APP_BASE_PATH`, and the `APP_REDIRECT_AFTER_*` urls. Prefer the `*_FILE`
+secret pattern below for the secrets.
 
 ---
 
@@ -49,7 +62,7 @@ A secret mounted as a file never appears in the process environment, so it is **
 processor (the leading `trim:` strips the trailing newline):
 
 ```jsonc
-// environment-prod.json
+// app/config/environment.json
 "uri": "%env(trim:file:MONGO_URI_FILE)%"
 ```
 
