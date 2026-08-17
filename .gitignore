@@ -7,8 +7,8 @@ version.json
 .env
 .env.local
 /secrets/
-# per-environment variable overlays for gf db:*/env (keep prod.env.example committed)
-app/config/*.env
+# per-environment variable overlays for gf db:*/env at the app root (prod.env.example stays committed)
+/*.env
 
 .phpunit.cache/
 .phpunit.result.cache

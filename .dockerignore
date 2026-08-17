@@ -5,7 +5,7 @@ node_modules
 .env
 .env.local
 secrets
-app/config/*.env
+*.env
 *.md
 .idea
 .phpunit.cache

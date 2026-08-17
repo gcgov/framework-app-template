@@ -32,13 +32,13 @@ docker compose exec php composer ci
 
 Before first run you still scaffold the identity/URL placeholders with `gf setup` (it replaces
 the `{app_*}` tokens in the config, nginx, and compose files — they become the baked
-`default:` fallbacks inside `environment.json`'s `%env(...)%` references).
+`default:` fallbacks inside `config.json`'s `%env(...)%` references).
 
 **Environment selection is the environment itself.** The committed
-`app/config/environment.json` is the only config file; the variable values the container is
+root-level `config.json` is the only config file (app + environment sections merged); the variable values the container is
 given decide whether it behaves as local, prod, or anything else. `gf env` validates that
 resolution (`gf env` for the active environment, `gf env prod` for the
-`app/config/prod.env` overlay used by `gf db:*` commands).
+`prod.env` overlay used by `gf db:*` commands).
 
 ### Production configuration checklist
 
@@ -62,7 +62,7 @@ A secret mounted as a file never appears in the process environment, so it is **
 processor (the leading `trim:` strips the trailing newline):
 
 ```jsonc
-// app/config/environment.json
+// config.json
 "uri": "%env(trim:file:MONGO_URI_FILE)%"
 ```
 

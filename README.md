@@ -20,7 +20,7 @@ syntax.
    `{app_redirect_after_logout}`, the `{app_microsoft_*}` client id/tenant/drive id, and the
    matching `{prod_app_*}` values for production.
 3. Provide secrets and per-environment values as **environment variables**, not tokens. The
-   committed `app/config/environment.json` references them with `%env(...)%` — e.g.
+   committed root `config.json` references them with `%env(...)%` — e.g.
    `"uri": "%env(MONGO_URI)%"`, `"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%"`,
    `"basePath": "%env(default:...:APP_BASE_PATH)%"`. Whichever values the process environment
    supplies *are* the environment — there is nothing to activate. Copy `.env.example` to `.env`
@@ -37,9 +37,9 @@ syntax.
 
 ### Working with production data
 
-Copy `app/config/prod.env.example` to `app/config/prod.env` (gitignored) and fill in the prod
+Copy `prod.env.example` to `prod.env` at the application root (gitignored) and fill in the prod
 values; validate it with `vendor/bin/gf env prod`. Then `gf db:restore --from=prod` and
-`gf db:run --env=prod` resolve `environment.json` with that overlay — no prod config file ever
+`gf db:run --env=prod` resolve `config.json` with that overlay — no prod config file ever
 lives in the repo.
 
 ## Documentation

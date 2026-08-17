@@ -35,9 +35,9 @@ class router
 		/** @var \gcgov\framework\models\route[] $routes */
 		$routes = [];
 
-		//the base path comes from environment.json (env var APP_BASE_PATH), so it can differ per
+		//the base path comes from config.json (env var APP_BASE_PATH), so it can differ per
 		//environment with no code change; getBasePath() returns '/api' style ('/' at domain root)
-		$routePrepend = rtrim( \gcgov\framework\config::getEnvironmentConfig()->getBasePath(), '/' );
+		$routePrepend = rtrim( \gcgov\framework\config::getBasePath(), '/' );
 
 		//WIDGETS
 		$routes[] = new route( 'GET', $routePrepend.'/widgets', '\app\controllers\widget', 'getAll', true, [ 'Widget.Read' ] );

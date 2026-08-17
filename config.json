@@ -1,4 +1,17 @@
 {
+	"app": {
+		"title": "{app_title}",
+		"guid": "{app_guid}"
+	},
+	"email": {
+		"fromAddress": "{app_smtp_sendmail_from_address}",
+		"fromName": "{app_smtp_sendmail_from_name}",
+		"SMTPUsername": "%env(default::SMTP_USERNAME)%",
+		"SMTPPassword": "%env(default::SMTP_PASSWORD)%"
+	},
+	"settings": {
+		"useSession": false
+	},
 	"type": "%env(default:local:APP_TYPE)%",
 	"serverName": "%env(default:app.local:APP_SERVER_NAME)%",
 	"rootUrl": "%env(default:{app_root_url}:APP_ROOT_URL)%",
