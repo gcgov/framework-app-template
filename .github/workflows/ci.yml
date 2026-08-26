@@ -18,7 +18,7 @@ jobs:
         php: ['8.3']
     steps:
       - uses: actions/checkout@v4
-      - name: Check out sibling repositories required by composer-ci.json
+      - name: Check out gcgov/framework (composer-ci.json resolves it from a sibling path repo)
         uses: actions/checkout@v4
         with:
           # Framework points at the Docker-support branch until it is tagged/merged
@@ -26,26 +26,6 @@ jobs:
           repository: gcgov/framework
           ref: claude/docker-gcgov-framework-tphme2
           path: ../framework
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-gcgov-cron-monitor
-          ref: main
-          path: ../framework-service-gcgov-cron-monitor
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-documentation
-          ref: main
-          path: ../framework-service-documentation
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-auth-oauth-server
-          ref: main
-          path: ../framework-service-auth-oauth-server
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-user-crud
-          ref: main
-          path: ../framework-service-user-crud
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -56,7 +36,7 @@ jobs:
         run: |
           cp composer-ci.json composer.json
           # The committed composer.lock is for Packagist/Docker builds; path-repo
-          # resolution against the sibling checkouts must not reuse it.
+          # resolution against the framework checkout must not reuse it.
           rm -f composer.lock
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
@@ -72,33 +52,14 @@ jobs:
         php: ['8.3']
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Check out gcgov/framework (composer-ci.json resolves it from a sibling path repo)
+        uses: actions/checkout@v4
         with:
           # Framework points at the Docker-support branch until it is tagged/merged
           # to main. Revert this ref to `main` (or the release tag) afterwards.
           repository: gcgov/framework
           ref: claude/docker-gcgov-framework-tphme2
           path: ../framework
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-gcgov-cron-monitor
-          ref: main
-          path: ../framework-service-gcgov-cron-monitor
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-documentation
-          ref: main
-          path: ../framework-service-documentation
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-auth-oauth-server
-          ref: main
-          path: ../framework-service-auth-oauth-server
-      - uses: actions/checkout@v4
-        with:
-          repository: gcgov/framework-service-user-crud
-          ref: main
-          path: ../framework-service-user-crud
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -109,7 +70,7 @@ jobs:
         run: |
           cp composer-ci.json composer.json
           # The committed composer.lock is for Packagist/Docker builds; path-repo
-          # resolution against the sibling checkouts must not reuse it.
+          # resolution against the framework checkout must not reuse it.
           rm -f composer.lock
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist

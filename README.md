@@ -50,6 +50,26 @@ mean a missing value fails loudly instead of quietly using your local database.
   (Docker/Swarm/Kubernetes secrets, TLS at the edge, the CLI).
 - The `gf` CLI: `vendor/bin/gf` (`gf setup`, `gf env`, `gf cli`, `gf db:*`, …).
 
+## Running the CI checks (phpstan + phpunit)
+
+CI runs against `composer-ci.json`, which resolves `gcgov/framework` from a sibling checkout
+(a `../framework` path repository) instead of Packagist — so the checks run against the exact
+framework revision you have locally, before any release is tagged. It intentionally does **not**
+require the framework-service plugins the app registers: nothing under `app/` or `tests/`
+references a plugin class, so they are not needed to analyze or test this repo (the committed
+`composer.json` keeps them for real scaffolded apps).
+
+```bash
+git clone https://github.com/gcgov/framework ../framework   # sibling checkout the path repo points at
+cp composer-ci.json composer.json
+rm -f composer.lock
+composer install --prefer-dist          # add --ignore-platform-req=ext-mongodb if the extension isn't loaded
+composer ci                             # = composer phpstan && composer test
+```
+
+The tests shim `ext-mongodb` when it is absent (`tests/bootstrap.php`), so the suite runs without
+a live MongoDB. Restore the app manifest afterwards with `git checkout composer.json`.
+
 ## Local development without Docker
 
 You can still run the app under any PHP 8.3+ SAPI with `ext-mongodb`. Point the web root at

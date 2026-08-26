@@ -1,17 +1,13 @@
 {
 	"name": "gcgov/framework-app-template",
-	"description": "App template repository to scaffold a new application based on gcgov/framework. CI variant that resolves the framework and sibling services from local paths instead of the production Windows path.",
+	"description": "CI variant of composer.json: resolves gcgov/framework from a local path repo (sibling checkout) instead of Packagist. The framework-service plugins the app registers are NOT needed to phpstan-analyze app/ or run the unit tests (nothing under app/ or tests/ references a plugin class), so they are omitted here to keep CI self-contained and runnable without the sibling plugin repos. The committed composer.json keeps them for real scaffolded apps.",
 	"require": {
-		"php": ">=8.2",
+		"php": ">=8.3",
 		"ext-mongodb": "*",
 		"mongodb/mongodb": "^2.1",
 		"phpmailer/phpmailer": "^6.2",
 		"zircote/swagger-php": "^6.1",
-		"gcgov/framework": "dev-claude/docker-gcgov-framework-tphme2",
-		"gcgov/framework-service-gcgov-cron-monitor": "dev-claude/trusting-ptolemy-TFTfV",
-		"gcgov/framework-service-documentation": "dev-claude/trusting-ptolemy-TFTfV",
-		"gcgov/framework-service-auth-oauth-server": "dev-claude/trusting-ptolemy-TFTfV",
-		"gcgov/framework-service-user-crud": "dev-claude/trusting-ptolemy-TFTfV"
+		"gcgov/framework": "dev-claude/docker-gcgov-framework-tphme2"
 	},
 	"require-dev": {
 		"phpstan/phpstan": "^2.1",
@@ -19,11 +15,7 @@
 		"jetbrains/phpstorm-attributes": "^1.0"
 	},
 	"repositories": [
-		{ "type": "path", "url": "../framework", "options": { "symlink": false } },
-		{ "type": "path", "url": "../framework-service-gcgov-cron-monitor", "options": { "symlink": false } },
-		{ "type": "path", "url": "../framework-service-documentation", "options": { "symlink": false } },
-		{ "type": "path", "url": "../framework-service-auth-oauth-server", "options": { "symlink": false } },
-		{ "type": "path", "url": "../framework-service-user-crud", "options": { "symlink": false } }
+		{ "type": "path", "url": "../framework", "options": { "symlink": false } }
 	],
 	"autoload": {
 		"psr-4": {
