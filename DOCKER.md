@@ -37,8 +37,8 @@ the `{app_*}` tokens in the config, nginx, and compose files — they become the
 **Environment selection is the environment itself.** The committed
 root-level `config.json` is the only config file (app + environment sections merged); the variable values the container is
 given decide whether it behaves as local, prod, or anything else. `gf env` validates that
-resolution (`gf env` for the active environment, `gf env prod` for the
-`prod.env` overlay used by `gf db:*` commands).
+resolution (`gf env` for the active configuration, `gf env prod` for the CLI-only
+`environments.prod` entry used by `gf db:*` commands).
 
 ### Production configuration checklist
 

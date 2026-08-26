@@ -37,10 +37,12 @@ syntax.
 
 ### Working with production data
 
-Copy `prod.env.example` to `prod.env` at the application root (gitignored) and fill in the prod
-values; validate it with `vendor/bin/gf env prod`. Then `gf db:restore --from=prod` and
-`gf db:run --env=prod` resolve `config.json` with that overlay — no prod config file ever
-lives in the repo.
+`config.json` has a CLI-only `environments.prod` entry (stripped at runtime) whose Mongo
+connection references `PROD_MONGO_URI` / `PROD_MONGO_DATABASE`. To pull prod data locally,
+set those two variables in your gitignored `.env` (they are listed, commented, in
+`.env.example`), validate with `vendor/bin/gf env prod`, then run `gf db:restore --from=prod`
+or `gf db:run --env=prod`. No prod config file ever lives in the repo, and the prefixed names
+mean a missing value fails loudly instead of quietly using your local database.
 
 ## Documentation
 

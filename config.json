@@ -53,5 +53,17 @@
 		"apiKey": "%env(PAYJUNCTION_API_KEY)%",
 		"terminalId": "%env(default:{app_payjunction_terminal_id}:PAYJUNCTION_TERMINAL_ID)%",
 		"merchantId": "%env(default:{app_payjunction_merchant_id}:PAYJUNCTION_MERCHANT_ID)%"
+	},
+	"environments": {
+		"prod": {
+			"type": "prod",
+			"mongoDatabases": [
+				{
+					"default": true,
+					"database": "%env(PROD_MONGO_DATABASE)%",
+					"uri": "%env(PROD_MONGO_URI)%"
+				}
+			]
+		}
 	}
 }
