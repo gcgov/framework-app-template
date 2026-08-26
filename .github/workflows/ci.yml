@@ -8,74 +8,41 @@ on:
 permissions:
   contents: read
 
+env:
+  # The prod image is php:8.4-fpm; composer.lock is resolved for that platform
+  # (see config.platform in composer.json). Keep these in step.
+  PHP_VERSION: '8.4'
+
 jobs:
   phpstan:
-    name: PHPStan (PHP ${{ matrix.php }})
+    name: PHPStan
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3']
     steps:
       - uses: actions/checkout@v4
-      - name: Check out gcgov/framework (composer-ci.json resolves it from a sibling path repo)
-        uses: actions/checkout@v4
-        with:
-          # Framework points at the Docker-support branch until it is tagged/merged
-          # to main. Revert this ref to `main` (or the release tag) afterwards.
-          repository: gcgov/framework
-          ref: claude/docker-gcgov-framework-tphme2
-          path: ../framework
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: ${{ env.PHP_VERSION }}
           extensions: mongodb, sodium, fileinfo, pdo, imagick
           tools: composer:v2
           coverage: none
-      - name: Swap composer.json for CI variant
-        run: |
-          cp composer-ci.json composer.json
-          # The committed composer.lock is for Packagist/Docker builds; path-repo
-          # resolution against the framework checkout must not reuse it.
-          rm -f composer.lock
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-      - name: Run PHPStan
-        run: composer phpstan
+      # Installs from the committed composer.lock. gcgov/framework resolves through
+      # the vcs repository in composer.json until v7.0.0-rc.1 is tagged.
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: composer phpstan
 
   phpunit:
-    name: PHPUnit (PHP ${{ matrix.php }})
+    name: PHPUnit
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3']
     steps:
       - uses: actions/checkout@v4
-      - name: Check out gcgov/framework (composer-ci.json resolves it from a sibling path repo)
-        uses: actions/checkout@v4
-        with:
-          # Framework points at the Docker-support branch until it is tagged/merged
-          # to main. Revert this ref to `main` (or the release tag) afterwards.
-          repository: gcgov/framework
-          ref: claude/docker-gcgov-framework-tphme2
-          path: ../framework
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: ${{ env.PHP_VERSION }}
           extensions: mongodb, sodium, fileinfo, pdo, imagick
           tools: composer:v2
           coverage: none
-      - name: Swap composer.json for CI variant
-        run: |
-          cp composer-ci.json composer.json
-          # The committed composer.lock is for Packagist/Docker builds; path-repo
-          # resolution against the framework checkout must not reuse it.
-          rm -f composer.lock
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-      - name: Run PHPUnit
-        run: composer test
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: composer test
 
   nginx:
     name: Nginx config lint
@@ -97,9 +64,6 @@ jobs:
   docker-build:
     name: Docker build (prod target)
     runs-on: ubuntu-latest
-    # Best effort: requires the framework release carrying the %env() resolver to
-    # be published to Packagist (see composer.json). Allowed to fail until then.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Build the production image

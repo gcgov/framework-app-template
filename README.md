@@ -52,26 +52,25 @@ mean a missing value fails loudly instead of quietly using your local database.
 
 ## Running the CI checks (phpstan + phpunit)
 
-CI runs against `composer-ci.json`, which resolves `gcgov/framework` from a sibling checkout
-(a `../framework` path repository) instead of Packagist — so the checks run against the exact
-framework revision you have locally, before any release is tagged. It intentionally does **not**
-require the framework-service plugins the app registers: nothing under `app/` or `tests/`
-references a plugin class, so they are not needed to analyze or test this repo (the committed
-`composer.json` keeps them for real scaffolded apps).
+`composer.json` resolves `gcgov/framework` from its v7 development branch through a `vcs`
+repository, and `composer.lock` pins the exact revision. This is a temporary bridge: when
+`v7.0.0-rc.1` is tagged, the constraint becomes `^7.0`, the `repositories` entry is deleted, and
+the lock is regenerated.
 
 ```bash
-git clone https://github.com/gcgov/framework ../framework   # sibling checkout the path repo points at
-cp composer-ci.json composer.json
-rm -f composer.lock
 composer install --prefer-dist          # add --ignore-platform-req=ext-mongodb if the extension isn't loaded
 composer ci                             # = composer phpstan && composer test
 ```
 
 The tests shim `ext-mongodb` when it is absent (`tests/bootstrap.php`), so the suite runs without
-a live MongoDB. Restore the app manifest afterwards with `git checkout composer.json`.
+a live MongoDB.
+
+`composer.lock` is resolved for PHP 8.4.0 (`config.platform.php`), which is what the production
+image runs — without that pin, resolving on a newer PHP locks packages that will not install in
+the image. Keep the pin, the `php` constraint, and the Dockerfile's base image in step.
 
 ## Local development without Docker
 
-You can still run the app under any PHP 8.3+ SAPI with `ext-mongodb`. Point the web root at
+You can still run the app under any PHP 8.4+ SAPI with `ext-mongodb`. Point the web root at
 `/www/`, resolve config secrets through your shell environment or a `.env` file at the project
 root, and use `vendor/bin/gf` for CLI tasks. The Docker stack is the supported, reproducible path.

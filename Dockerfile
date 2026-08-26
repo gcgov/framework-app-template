@@ -11,7 +11,7 @@
 # composer.lock for reproducible images.
 
 # ---- base: PHP-FPM + required extensions ----
-FROM php:8.3-fpm AS base
+FROM php:8.4-fpm AS base
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
