@@ -19,6 +19,11 @@
 #
 # config.platform.php stays. It pins resolution to the PHP the production image runs, and
 # without it, resolving on a newer PHP locks packages that will not install in the image.
+#
+# If composer complains about a missing extension here, ignore that extension by name
+# (--ignore-platform-req=ext-mongodb). NEVER reach for blanket --ignore-platform-reqs: it
+# also discards the php pin, which silently locks packages the production image cannot
+# install. The `composer install` below is what catches that, so do not skip it either.
 
 set -euo pipefail
 
@@ -54,10 +59,15 @@ with open('composer.json', 'w') as handle:
     handle.write('\n')
 PY
 
-composer validate --no-check-publish --no-check-all
+# --no-check-lock: the lock is deliberately stale at this point — the constraint has just
+# changed and the regeneration is the next step. Only the file's own validity matters here.
+composer validate --no-check-lock --no-check-publish --no-check-all
 
 echo '==> regenerating composer.lock'
 composer update gcgov/framework --with-all-dependencies --no-install --no-interaction
+
+# Now the lock must agree with composer.json, so check that too.
+composer validate --no-check-publish --no-check-all
 
 echo '==> verifying'
 composer install --no-interaction --no-progress --prefer-dist

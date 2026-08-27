@@ -53,10 +53,15 @@ application never has to be handed a value it does not use in order to boot.
 
 ## Running the CI checks (phpstan + phpunit)
 
-`composer.json` resolves `gcgov/framework` from its v7 development branch through a `vcs`
-repository, and `composer.lock` pins the exact revision. This is a temporary bridge: when
-`v7.0.0-rc.1` is tagged, the constraint becomes `^7.0`, the `repositories` entry is deleted, and
-the lock is regenerated.
+`composer.json` requires `gcgov/framework: ^7.0@RC` and `composer.lock` pins the exact release.
+The `@RC` stability flag is there because v7 is currently a release candidate; at `v7.0.0` it
+becomes plain `^7.0`:
+
+```bash
+scripts/adopt-framework-release.sh '^7.0'
+```
+
+To run the checks:
 
 ```bash
 composer install --prefer-dist          # add --ignore-platform-req=ext-mongodb if the extension isn't loaded
@@ -68,7 +73,9 @@ a live MongoDB.
 
 `composer.lock` is resolved for PHP 8.4.0 (`config.platform.php`), which is what the production
 image runs — without that pin, resolving on a newer PHP locks packages that will not install in
-the image. Keep the pin, the `php` constraint, and the Dockerfile's base image in step.
+the image. Keep the pin, the `php` constraint, and the Dockerfile's base image in step — and
+never use blanket `--ignore-platform-reqs`, which discards the pin along with the extension
+checks.
 
 ## Local development without Docker
 

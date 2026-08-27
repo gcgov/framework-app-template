@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "507acfa5108428fd982ac28bdab21449",
+    "content-hash": "90155cc972ff2aa175decab94235dcec",
     "packages": [
         {
             "name": "andrewsauder/json-deserialize",
@@ -668,10 +668,10 @@
         },
         {
             "name": "gcgov/framework",
-            "version": "dev-claude/v7-config-deployment-review-4tgoxl",
+            "version": "v7.0.0-rc.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/gcgov/framework",
+                "url": "https://github.com/gcgov/framework.git",
                 "reference": "a9f404c123c061b36b071a868ec5889e9ccaefcc"
             },
             "dist": {
@@ -727,22 +727,15 @@
                     "gcgov\\framework\\": "src/"
                 }
             },
-            "scripts": {
-                "phpstan": [
-                    "phpstan analyse --memory-limit=512M"
-                ],
-                "test": [
-                    "phpunit"
-                ],
-                "ci": [
-                    "@phpstan",
-                    "@test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Open source framework for PHP applications. Includes MongoDB modelling system.",
+            "support": {
+                "issues": "https://github.com/gcgov/framework/issues",
+                "source": "https://github.com/gcgov/framework/tree/v7.0.0-rc.1"
+            },
             "time": "2026-08-27T12:20:45+00:00"
         },
         {
@@ -7371,7 +7364,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "gcgov/framework": 20
+        "gcgov/framework": 5
     },
     "prefer-stable": false,
     "prefer-lowest": false,
