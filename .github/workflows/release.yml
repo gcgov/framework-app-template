@@ -1,14 +1,15 @@
-# Build a Release and hand it to the ops repository to deploy.
-#
-# This file is deliberately thin. The real logic lives in a reusable workflow in
-# gcgov/deploy so that changing how deployment works is one pull request, not thirty.
+# Build a Release and ask gcgov/deploy to deploy it.
 #
 #   push to main   build and publish only
-#   push of v*     build, publish, and deploy
+#   push of v*     build, publish, and request deployment
 #
-# The deploy step runs on gcgov/deploy's self-hosted runner for the target Zone, which
-# is why nothing here needs SSH access or any secret beyond the registry token: this
-# repository's contributors never get code execution inside a Zone.
+# This file is deliberately thin. The real logic lives in gcgov/deploy, so changing how
+# deployment works is one pull request rather than one per application.
+#
+# What it calls only ever runs on GitHub-hosted runners. Deployment itself happens in
+# gcgov/deploy's own context, reached by repository_dispatch — a called workflow executes
+# in the CALLER's context, so if the deploy step lived here, every contributor to this
+# repository would have code execution inside a network Zone.
 
 name: Release
 
@@ -23,12 +24,15 @@ permissions:
 
 jobs:
   release:
-    uses: gcgov/deploy/.github/workflows/build-and-deploy.yml@main
+    uses: gcgov/deploy/.github/workflows/build.yml@main
     with:
-      # Everything else derives from this: image names, ops repo paths, database users.
+      # Everything derives from this: image names, ops repo paths, database users.
       app: framework-app-template
       # Which Zone this application runs in: internal | bridge | isolated.
       zone: bridge
       # Only a tag deploys. A push to main publishes an image and stops there.
       deploy: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    secrets: inherit
+    secrets:
+      # Fine-grained token with contents:write on gcgov/deploy and nothing else. Used
+      # solely to fire the deploy dispatch; without it, images publish and nothing ships.
+      OPS_DISPATCH_TOKEN: ${{ secrets.OPS_DISPATCH_TOKEN }}
