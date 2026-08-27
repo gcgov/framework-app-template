@@ -38,10 +38,47 @@ container images — nginx and PHP-FPM — and keeps every secret out of the com
 
 ## Adding what you need
 
-`config.json` ships with five variables and nothing else — no Microsoft, PayJunction, or SMTP
+`config.json` ships with seven variables and nothing else — no Microsoft, PayJunction, or SMTP
 block. Add the section for an integration when the application actually uses one; a section that
 is absent hydrates to its defaults. Keeping unused credentials out of the file means the
 application never has to be handed a value it does not use in order to boot.
+
+## Framework Services
+
+Framework Services are part of the framework; you switch one on by giving it a block in the
+`services` section. Presence enables — a block that is absent means the service is off, a block
+that is present (even `{}`) means it is on, and its contents are that service's settings.
+
+```json
+"services": {
+    "auth": { "provider": "oauth" },
+    "userCrud": {},
+    "documentation": {}
+}
+```
+
+- **`auth`** — one service, two providers. `"oauth"` is a full OAuth server (password,
+  third-party and authorization-code grants, plus MFA); `"msFront"` exchanges a Microsoft token
+  the front end already holds for an application token. Either way you get
+  `/.well-known/jwks.json`, `/auth/fileToken`, and a JWT guard over every route marked
+  `authentication: true`. Two providers cannot both be active — there is one `provider` key.
+- **`userCrud`** — `/user` CRUD over the resolved user model, gated on `User.Read` / `User.Write`.
+- **`documentation`** — `GET /documentation.yaml`, generated from the annotations in this
+  application and the framework.
+
+`auth` takes two optional settings, omitted here so they keep their defaults. Add them when the
+application wants a different answer:
+
+```json
+"auth": { "provider": "oauth", "blockNewUsers": false, "defaultNewUserRoles": [ "Widget.Read" ] }
+```
+
+`blockNewUsers` defaults to `true`, so only users already in the database may sign in. Set it
+false to provision a user on first successful authentication, carrying `defaultNewUserRoles`.
+
+Routes that declare `authentication: true` need something to guard them. If no auth service is
+enabled and `\app\router::providesAuthentication()` returns false, the framework refuses to
+boot rather than serve routes that look protected and are not.
 
 ## Documentation
 

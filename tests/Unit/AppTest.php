@@ -22,17 +22,12 @@ final class AppTest extends TestCase {
 		$this->assertTrue( ( new \ReflectionClass( app::class ) )->isFinal() );
 	}
 
-	public function testRegisterFrameworkServiceNamespacesReturnsArray(): void {
-		$namespaces = ( new app() )->registerFrameworkServiceNamespaces();
-		$this->assertIsArray( $namespaces );
-	}
-
-	public function testRegisteredNamespacesIncludeExpectedServices(): void {
-		$namespaces = ( new app() )->registerFrameworkServiceNamespaces();
-		$this->assertContains( '\gcgov\framework\services\documentation', $namespaces );
-		$this->assertContains( '\gcgov\framework\services\cronMonitor', $namespaces );
-		$this->assertContains( '\gcgov\framework\services\usercrud', $namespaces );
-		$this->assertContains( '\gcgov\framework\services\authoauth', $namespaces );
+	/**
+	 * Framework Services are enabled in config.json's `services` section. The application
+	 * class no longer names them, and ConfigFilesTest asserts what is actually enabled.
+	 */
+	public function testAppNoLongerRegistersServiceNamespaces(): void {
+		$this->assertFalse( method_exists( app::class, 'registerFrameworkServiceNamespaces' ) );
 	}
 
 	public function testLifecycleHooksReturnVoid(): void {

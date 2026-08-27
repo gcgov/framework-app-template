@@ -3,9 +3,6 @@
 		"title": "Application",
 		"guid": ""
 	},
-	"settings": {
-		"useSession": false
-	},
 	"logging": {
 		"lifecycle": false,
 		"renderer": false,
@@ -33,6 +30,14 @@
 		"redirectAfterLoginUrl": "%env(APP_REDIRECT_AFTER_LOGIN)%",
 		"redirectAfterLogoutUrl": "%env(APP_REDIRECT_AFTER_LOGOUT)%",
 		"keyPath": ""
+	},
+
+	"services": {
+		"auth": {
+			"provider": "oauth"
+		},
+		"userCrud": {},
+		"documentation": {}
 	},
 
 	"appDictionary": {}

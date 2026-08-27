@@ -25,8 +25,13 @@ jobs:
           extensions: mongodb, sodium, fileinfo, pdo, imagick
           tools: composer:v2
           coverage: none
-      # Installs from the committed composer.lock. gcgov/framework resolves through
-      # the vcs repository in composer.json until v7.0.0-rc.1 is tagged.
+      # composer install treats a lock that disagrees with composer.json as a warning and
+      # carries on from the stale lock — so a drifted lock installs the wrong framework and
+      # surfaces later as confusing class-not-found errors. validate exits non-zero, here,
+      # naming the problem.
+      - run: composer validate --no-check-publish --no-check-all
+      # Installs from the committed composer.lock, which pins gcgov/framework to a
+      # published release.
       - run: composer install --no-interaction --no-progress --prefer-dist
       - run: composer phpstan
 
@@ -41,6 +46,7 @@ jobs:
           extensions: mongodb, sodium, fileinfo, pdo, imagick
           tools: composer:v2
           coverage: none
+      - run: composer validate --no-check-publish --no-check-all
       - run: composer install --no-interaction --no-progress --prefer-dist
       - run: composer test
 

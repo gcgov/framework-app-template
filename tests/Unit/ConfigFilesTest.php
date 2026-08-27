@@ -75,7 +75,6 @@ final class ConfigFilesTest extends TestCase {
 		$this->assertSame( 'mongodb://mongodb:27017', $config->mongoDatabases[ 0 ]->uri );
 		$this->assertSame( 'app', $config->mongoDatabases[ 0 ]->database );
 		$this->assertSame( 'Application', $config->app->title, 'the placeholder `gf init --title` overwrites' );
-		$this->assertFalse( $config->settings->useSession );
 	}
 
 
@@ -151,12 +150,51 @@ final class ConfigFilesTest extends TestCase {
 		$raw = json_decode( (string)file_get_contents( self::ROOT . '/config.json' ), true );
 		$this->assertIsArray( $raw );
 
-		foreach( [ 'microsoft', 'payjunction', 'sqlDatabases', 'environments' ] as $absent ) {
+		// settings held only useSession, which the framework removed; cronMonitor was
+		// registered as a service but never given a url, so it did nothing. Both would now
+		// be present-and-blank blocks, which is what this test exists to prevent.
+		foreach( [ 'microsoft', 'payjunction', 'sqlDatabases', 'environments', 'settings', 'cronMonitor' ] as $absent ) {
 			$this->assertArrayNotHasKey( $absent, $raw );
 		}
 		foreach( [ 'serverName', 'cookieUrl', 'phpPath', 'baseUrl' ] as $removed ) {
 			$this->assertArrayNotHasKey( $removed, $raw );
 		}
+	}
+
+
+	/**
+	 * Which Framework Services this application runs, asserted against the real committed
+	 * config.json — this is the only place that fact is now recorded.
+	 */
+	public function testEnabledServicesAreAuthUserCrudAndDocumentation(): void {
+		$services = configLoader::load( self::ROOT )->services;
+
+		$this->assertNotNull( $services->auth );
+		$this->assertSame( 'oauth', $services->auth->provider );
+		$this->assertTrue( $services->auth->isOauth() );
+		$this->assertNotNull( $services->userCrud );
+		$this->assertNotNull( $services->documentation );
+	}
+
+
+	/** Selecting a provider selects its block and only its block. */
+	public function testOnlyTheSelectedAuthProviderIsConfigured(): void {
+		$auth = configLoader::load( self::ROOT )->services->auth;
+
+		$this->assertNotNull( $auth->oauth, 'the selected provider hydrates to its defaults when omitted' );
+		$this->assertNull( $auth->msFront );
+	}
+
+
+	/**
+	 * Shipped blank, these would be configuration that looks deliberate and is not. They
+	 * take their defaults; README documents them for an application that wants to change them.
+	 */
+	public function testNewUserProvisioningTakesItsFailClosedDefaults(): void {
+		$auth = configLoader::load( self::ROOT )->services->auth;
+
+		$this->assertTrue( $auth->blockNewUsers, 'only users already in the database may sign in' );
+		$this->assertSame( [], $auth->defaultNewUserRoles );
 	}
 
 
