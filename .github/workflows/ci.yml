@@ -62,11 +62,47 @@ jobs:
             sh -c 'set -e; /docker-entrypoint.sh nginx -t'
 
   docker-build:
-    name: Docker build (prod target)
+    name: Docker build (${{ matrix.target }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [php, nginx]
     steps:
       - uses: actions/checkout@v4
-      - name: Build the production image
-        run: docker build --target prod -t framework-app-template:ci .
-      - name: Image contains the committed config.json
-        run: docker run --rm --entrypoint test framework-app-template:ci -f config.json
+      - name: Build
+        run: docker build --target ${{ matrix.target }} --build-arg APP_VERSION=ci -t app:${{ matrix.target }} .
+
+      - name: php — the committed config.json is in the image, secrets are not
+        if: matrix.target == 'php'
+        run: |
+          set -eux
+          docker run --rm --entrypoint test app:php -f config.json
+          # JWT keys and .env are gitignored, so they must not have reached the build
+          # context. If either appears, authentication material is baked into a layer.
+          ! docker run --rm --entrypoint test app:php -e .env
+          ! docker run --rm --entrypoint test app:php -d srv/jwtCertificates
+
+      - name: php — runs as a non-root user with a valid FPM config
+        if: matrix.target == 'php'
+        run: |
+          set -eux
+          test "$(docker run --rm --entrypoint id app:php -un)" = www-data
+          # -t exits non-zero on a bad pool config, and prints the warning we removed
+          # www.conf to avoid; fail if it comes back.
+          docker run --rm --entrypoint php-fpm app:php -t 2>&1 | tee /tmp/fpm.log
+          ! grep -qi "when FPM is not running as root" /tmp/fpm.log
+
+      - name: php — opcache and the upload limits the nginx config assumes
+        if: matrix.target == 'php'
+        run: |
+          set -eux
+          docker run --rm --entrypoint php app:php -r 'exit(ini_get("opcache.enable") ? 0 : 1);'
+          docker run --rm --entrypoint php app:php -r 'exit(ini_get("display_errors") ? 1 : 0);'
+          # Must be >= nginx client_max_body_size (1024m), or a large upload is accepted
+          # by nginx and then rejected by PHP after crossing the wire.
+          docker run --rm --entrypoint php app:php -r 'exit(ini_get("post_max_size") === "1024M" ? 0 : 1);'
+
+      - name: nginx — serves the application's static assets
+        if: matrix.target == 'nginx'
+        run: docker run --rm --entrypoint test app:nginx -f /var/www/app/www/index.php

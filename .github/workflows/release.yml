@@ -1,0 +1,34 @@
+# Build a Release and hand it to the ops repository to deploy.
+#
+# This file is deliberately thin. The real logic lives in a reusable workflow in
+# gcgov/deploy so that changing how deployment works is one pull request, not thirty.
+#
+#   push to main   build and publish only
+#   push of v*     build, publish, and deploy
+#
+# The deploy step runs on gcgov/deploy's self-hosted runner for the target Zone, which
+# is why nothing here needs SSH access or any secret beyond the registry token: this
+# repository's contributors never get code execution inside a Zone.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    uses: gcgov/deploy/.github/workflows/build-and-deploy.yml@main
+    with:
+      # Everything else derives from this: image names, ops repo paths, database users.
+      app: framework-app-template
+      # Which Zone this application runs in: internal | bridge | isolated.
+      zone: bridge
+      # Only a tag deploys. A push to main publishes an image and stops there.
+      deploy: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    secrets: inherit

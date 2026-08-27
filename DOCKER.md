@@ -1,171 +1,167 @@
-# Running this app in Docker
+# Running and deploying this application
 
-This template ships a Linux container stack — **Nginx + PHP-FPM** (plus an optional MongoDB
-for development) — that replaces the old Windows/IIS hosting. Secrets are injected from the
-environment or Docker secrets via the framework's `%env(...)%` config resolver, so nothing
-sensitive lives in the config files.
+This template builds two container images from one context — **php** (PHP-FPM running the
+application) and **nginx** (static assets, proxying everything else to php). They are tagged
+together, so the pair can never disagree about which release it is serving.
 
-> **Prerequisite:** the images install `gcgov/framework` from Packagist. The release that ships
-> the `%env()` config resolver must be tagged and referenced by `composer.json` before
-> `composer install` (and therefore `docker build`) can succeed. See `composer.json`.
+A **Release** is one immutable image identified by content digest. Deploying and rolling back are
+the same operation: point a host at a different digest and restart. Nothing is built, resolved, or
+updated on a production host.
+
+> Production topology — compose files, the Traefik stack, and secrets — lives in the **ops
+> repository**, `gcgov/deploy`, not here. This repository builds Releases; the ops repository
+> decides what runs.
 
 ---
 
-## Quick start (local development)
+## Local development
 
 ```bash
-cp .env.example .env          # fill in any real values you have; blanks are fine for dev
-docker compose --profile dev up --build
-# → API on http://localhost:8080
+vendor/bin/gf env --init      # write .env from what config.json references
+cp .env.example .env.local    # and the variables docker compose needs
+# fill in the blanks in .env, then:
+docker compose up --build
+open http://localhost:8080
 ```
 
-The `dev` profile also starts a throwaway MongoDB at `mongodb:27017`, which `.env.example`'s
-`MONGO_URI` points at.
-
-Run framework CLI routes and tooling inside the PHP container:
+The working tree is bind-mounted into the php container and opcache revalidates on every request
+(`docker/php/conf.d/dev.ini`), so edits are live.
 
 ```bash
+docker compose exec php vendor/bin/gf env         # does the configuration resolve?
 docker compose exec php vendor/bin/gf cli:list
-docker compose exec php vendor/bin/gf cli /your/cli/route
 docker compose exec php composer ci
 ```
 
-Before first run you still scaffold the identity/URL placeholders with `gf setup` (it replaces
-the `{app_*}` tokens in the config, nginx, and compose files — they become the baked
-`default:` fallbacks inside `config.json`'s `%env(...)%` references).
+---
 
-**Environment selection is the environment itself.** The committed
-root-level `config.json` is the only config file (app + environment sections merged); the variable values the container is
-given decide whether it behaves as local, prod, or anything else. `gf env` validates that
-resolution (`gf env` for the active configuration, `gf env prod` for the CLI-only
-`environments.prod` entry used by `gf db:*` commands).
+## Configuration
 
-### Production configuration checklist
+One committed `config.json`. Every `%env(...)%` reference in it is **required** — there are no
+defaults, and a variable set to the empty string counts as unset. A production container that
+forgets a variable fails to start and names it, rather than booting in some half-configured state.
 
-A prod container must supply (hard `%env()` references — missing ones fail loudly naming the
-variable): `MONGO_URI`, `MONGO_DATABASE`, `MICROSOFT_CLIENT_SECRET`, `PAYJUNCTION_PASSWORD`,
-`PAYJUNCTION_API_KEY` — plus the identity overrides `APP_TYPE=prod`, `APP_SERVER_NAME`,
-`APP_ROOT_URL`, `APP_BASE_PATH`, and the `APP_REDIRECT_AFTER_*` urls. Prefer the `*_FILE`
-secret pattern below for the secrets.
+```bash
+vendor/bin/gf env --list      # what this application needs, and which are secrets
+vendor/bin/gf env             # resolve it against the current environment
+```
+
+The full reference is `readme/environment-variables.md` in the framework.
 
 ---
 
-## Securely setting environment variables in Docker
+## Secrets
 
-The framework reads secrets through `%env(...)%`, so **how** you supply those variables is what
-keeps them safe. In order of preference:
-
-### 1. Prefer file-based secrets (Docker / Swarm / Kubernetes secrets)
-
-A secret mounted as a file never appears in the process environment, so it is **not** exposed by
-`docker inspect` and does not leak into child processes. Mount it and read it with the `file`
-processor (the leading `trim:` strips the trailing newline):
+Secrets reach a container as **files**, never as environment variables:
 
 ```jsonc
-// config.json
-"uri": "%env(trim:file:MONGO_URI_FILE)%"
+// config.json — the same file in every environment
+"uri": "%env(secret:MONGO_URI)%"
 ```
 
-```yaml
-# compose / swarm
-services:
-  php:
-    environment:
-      MONGO_URI_FILE: /run/secrets/mongo_uri
-    secrets:
-      - mongo_uri
-secrets:
-  mongo_uri:
-    external: true          # `docker secret create mongo_uri ./mongo_uri`
-```
+`%env(secret:MONGO_URI)%` reads the file named by `MONGO_URI_FILE` when that variable is set, and
+falls back to `MONGO_URI` otherwise. A developer sets `MONGO_URI` in `.env`; production sets
+`MONGO_URI_FILE=/run/secrets/<app>/mongo_uri` and mounts the file. One config file, both worlds.
 
-Kubernetes — mount the secret as a file and point the `*_FILE` variable at it:
+A `_FILE` variable naming a missing file is a **hard error**. It does not fall back to the plain
+variable — that would silently substitute a stale environment value for a secret that failed to
+mount, which is the failure you would least want to happen quietly.
 
-```yaml
-env:
-  - name: MONGO_URI_FILE
-    value: /run/secrets/mongo_uri
-volumeMounts:
-  - name: mongo-uri
-    mountPath: /run/secrets
-    readOnly: true
-volumes:
-  - name: mongo-uri
-    secret:
-      secretName: mongo-uri
-```
+Why files rather than environment variables: a value in the environment is visible in
+`docker inspect`, readable from `/proc/<pid>/environ`, and inherited by every child process. A
+mounted file is none of those things.
 
-### 2. Process environment variables (acceptable, less private)
+**Where the values come from.** Encrypted with SOPS in `gcgov/deploy`, against a GCP KMS key per
+Zone plus an offline break-glass key. An operator decrypts on their own workstation and provisions
+the files to the host — a step deliberately separate from deploying, so no host holds a decryption
+key and CI never sees a secret. See `docs/adr/0003-secrets-never-decrypt-in-ci-or-on-hosts.md`.
 
-Fine for non-secret config and local development; readable via `docker inspect` and the
-container's `/proc`, so avoid for high-value secrets.
+### JWT signing keys
+
+These are secrets too, and they are gitignored — so they are **not in the build context and not in
+the image**. A container must point `jwtAuth.keyPath` at a provisioned directory
+(`/run/secrets/<app>/jwt`) or authentication cannot work at all. Every replica must have the same
+keys; regenerating them signs every user out.
+
+### Rules
+
+- **Never bake a secret into an image.** `ENV`, `ARG` and `COPY` all persist in layers and in
+  `docker history`. Anyone who can pull the image can read them.
+- **Never put a real value in a compose file.** They are committed.
+- **Rotation is a provision plus a restart, not a rebuild.** The image does not change.
+
+---
+
+## Health
+
+| Route | Checks | Used by |
+|---|---|---|
+| `GET {basePath}/health` | Configuration resolved. No I/O. | Container `HEALTHCHECK`, Traefik |
+| `GET {basePath}/health/ready` | Pings every configured database. 503 when one is down. | The deploy gate |
+
+They are separate on purpose. If the container's healthcheck also pinged the database, a brief
+database outage would fail the probe, restart every replica, and turn a dependency blip into a
+crash loop.
+
+Both come from the framework, so every application has them — a deploy pipeline cannot gate on an
+endpoint an application might have skipped. `/health` reports the deployed version from
+`APP_VERSION`, baked in at build time, which is how you confirm a deploy actually landed.
+
+The nginx image's healthcheck URL is `HEALTH_URL`, defaulting to `http://localhost/health`. Set it
+to match when the application is not served at the domain root.
+
+---
+
+## Building
 
 ```bash
-docker run --env-file .env …                 # a gitignored env file
+docker build --target php   -t ghcr.io/gcgov/<app>/php   --build-arg APP_VERSION=$(git rev-parse --short HEAD) .
+docker build --target nginx -t ghcr.io/gcgov/<app>/nginx .
 ```
 
-```yaml
-services:
-  php:
-    env_file: [.env]                          # what this template's compose uses
-```
+In practice `.github/workflows/release.yml` does this: a push to `main` builds and publishes, a
+`v*` tag also deploys. Both call a reusable workflow in `gcgov/deploy`, so changing how deployment
+works is one pull request rather than one per application.
 
-Kubernetes can inject individual values from a Secret without a file:
-
-```yaml
-env:
-  - name: MICROSOFT_CLIENT_SECRET
-    valueFrom:
-      secretKeyRef: { name: app-secrets, key: microsoft-client-secret }
-```
-
-### Rules — do not break these
-
-- **Keep `.env` out of git.** It is gitignored here; commit only `.env.example` with blank/dummy
-  values.
-- **Never bake secrets into an image.** `ENV`, `ARG`, and `COPY` all persist in image layers and
-  in `docker history` — anyone who can pull the image can read them. Inject secrets at **run**
-  time, never build time.
-- **Never put real secret values in `docker-compose.yml`** (it is committed). Reference `${VAR}`
-  and keep the values in `.env` or a secrets manager.
-- **Rotation is a restart, not a rebuild.** Because secrets are injected at runtime, rotating a
-  credential means updating the secret/`.env` and restarting the container — the image is
-  unchanged.
+`composer.lock` is committed and `config.platform.php` pins resolution to the runtime the image
+runs. Without that pin, resolving on a newer PHP locks packages that will not install in the image.
 
 ---
 
 ## TLS and the forwarded scheme
 
-TLS is **not** terminated inside the container. Terminate it at your edge (reverse proxy, load
-balancer, ingress) and forward the original scheme:
+TLS terminates at Traefik, one instance per Zone, with certificates from Let's Encrypt over DNS-01
+— the only challenge type that works for a Zone with no inbound path from the internet, which is why
+all three Zones use it.
+
+The container never terminates TLS and never redirects to HTTPS. It needs the original scheme
+forwarded:
 
 ```
-proxy_set_header X-Forwarded-Proto $scheme;   # or the ingress equivalent
+proxy_set_header X-Forwarded-Proto $scheme;
 ```
 
-The bundled nginx config maps `X-Forwarded-Proto` to the `HTTPS` / `REQUEST_SCHEME` FastCGI
-params, so PHP sees the real client scheme (used for absolute URLs, secure cookies, redirects).
-There is deliberately no in-container HTTP→HTTPS redirect.
+The bundled nginx config maps that to the `HTTPS` and `REQUEST_SCHEME` FastCGI params, so PHP sees
+the real client scheme for absolute URLs, secure cookies, and redirects.
 
 ---
 
 ## What the nginx config does
 
-`docker/nginx/default.conf.template` reproduces the five behaviors the IIS `web.config` provided
-(scheme from the edge, trailing-slash strip, static pass-through for `theme/` and `favicon.ico`,
-front-controller routing to `index.php` with `REQUEST_URI` preserved, and CORS with an origin
-allowlist + preflight). The CORS origins come from `CORS_ORIGIN_APP`, `CORS_ORIGIN_FRONTEND`, and
-`CORS_ORIGIN_SWAGGER`; only those exact origins receive `Access-Control-Allow-Origin`.
+`docker/nginx/default.conf.template` reproduces the five behaviours the IIS `web.config` provided:
+the scheme from the edge, trailing-slash stripping, static pass-through for `theme/` and
+`favicon.ico`, front-controller routing to `index.php` with `REQUEST_URI` preserved, and CORS with
+an origin allowlist and preflight handling.
+
+The CORS origins come from `CORS_ORIGIN_APP`, `CORS_ORIGIN_FRONTEND` and `CORS_ORIGIN_SWAGGER`,
+substituted at container start. **Keep all three distinct** — they become keys in an nginx `map`,
+and a duplicate key stops nginx from starting.
 
 ---
 
-## Production image
+## What is deliberately not here
 
-```bash
-docker build --target prod -t your-app:latest .
-```
-
-The `prod` target installs `--no-dev` dependencies and runs PHP-FPM. Serve it behind an nginx
-container using `docker/nginx/default.conf.template` (both containers need the application files —
-bake them in or share a volume — because nginx serves the static assets and PHP-FPM executes
-`index.php`). Commit `composer.lock` for reproducible builds.
+- **A production compose file.** It is in `gcgov/deploy`, under the Zone that runs this application.
+- **Swarm or Kubernetes manifests.** The deployment target is Docker on three Ubuntu hosts.
+- **Anything that writes to the container filesystem and expects it to survive.** Logs go to stderr;
+  uploads and sessions under `srv/tmp` are scratch space that a deploy discards.

@@ -671,13 +671,13 @@
             "version": "dev-claude/v7-config-deployment-review-4tgoxl",
             "source": {
                 "type": "git",
-                "url": "git@github.com:gcgov/framework.git",
-                "reference": "c6a1adb7fb8c233d8e7ba2c2c846b37c84692a43"
+                "url": "https://github.com/gcgov/framework",
+                "reference": "a9f404c123c061b36b071a868ec5889e9ccaefcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gcgov/framework/zipball/c6a1adb7fb8c233d8e7ba2c2c846b37c84692a43",
-                "reference": "c6a1adb7fb8c233d8e7ba2c2c846b37c84692a43",
+                "url": "https://api.github.com/repos/gcgov/framework/zipball/a9f404c123c061b36b071a868ec5889e9ccaefcc",
+                "reference": "a9f404c123c061b36b071a868ec5889e9ccaefcc",
                 "shasum": ""
             },
             "require": {
@@ -743,7 +743,7 @@
                 "MIT"
             ],
             "description": "Open source framework for PHP applications. Includes MongoDB modelling system.",
-            "time": "2026-08-26T21:25:35+00:00"
+            "time": "2026-08-27T12:20:45+00:00"
         },
         {
             "name": "gcgov/framework-service-auth-oauth-server",

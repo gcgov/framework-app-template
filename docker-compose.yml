@@ -1,12 +1,13 @@
-# Local development stack: Nginx + PHP-FPM (+ optional MongoDB).
+# Local development stack. Production topology lives in the ops repository
+# (gcgov/deploy), not here — this file exists so a developer can run the app.
 #
-#   cp .env.example .env
-#   docker compose --profile dev up --build     # starts php, nginx and mongodb
+#   gf env --init                 # write .env with the variables config.json needs
+#   cp .env.example .env.local    # and the ones docker compose needs
+#   docker compose up --build
 #   open http://localhost:8080
 #
-# Without `--profile dev`, mongodb is not started — point MONGO_URI at an
-# external database instead. Secrets come from .env / the environment; never
-# put real secret values in this file (see DOCKER.md).
+# The php container mounts the working tree, so edits are live; opcache timestamp
+# validation is switched back on in docker/php/conf.d/dev.ini to match.
 
 services:
   php:
@@ -15,10 +16,14 @@ services:
       target: dev
     env_file:
       - .env
+      - .env.local
     volumes:
       - .:/var/www/app
-      # keep the image-built vendor/ from being shadowed by the bind mount
+      # Keep the image's vendor/ from being shadowed by the bind mount.
       - /var/www/app/vendor
+    depends_on:
+      mongodb:
+        condition: service_started
 
   nginx:
     image: nginx:1.27-alpine
@@ -28,19 +33,27 @@ services:
       - "${HTTP_PORT:-8080}:80"
     volumes:
       - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - .:/var/www/app:ro
+      # Static assets come from the working tree in development; the production nginx
+      # image bakes them in instead.
+      - ./www:/var/www/app/www:ro
     environment:
       PHP_FPM_HOST: "${PHP_FPM_HOST:-php:9000}"
       CORS_ORIGIN_APP: "${CORS_ORIGIN_APP:-http://localhost:8080}"
       CORS_ORIGIN_FRONTEND: "${CORS_ORIGIN_FRONTEND:-http://localhost:5173}"
       CORS_ORIGIN_SWAGGER: "${CORS_ORIGIN_SWAGGER:-http://localhost:8081}"
-      # Only substitute our own variables; leave nginx's $variables intact.
+      # Substitute only our own variables; nginx's own $variables must survive.
       NGINX_ENVSUBST_FILTER: "^(CORS_ORIGIN_|PHP_FPM_HOST)"
+    healthcheck:
+      # Matches the production image's check. APP_BASE_PATH is the application's, so
+      # adjust the path if the app is not served at the domain root.
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health || exit 1" ]
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
 
   mongodb:
     image: mongo:7
-    profiles:
-      - dev
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:

@@ -1,54 +1,55 @@
 # Framework App Template
 
-App template repository to scaffold a new [gcgov/framework](https://github.com/gcgov/framework)
-application. It runs in Docker (Nginx + PHP-FPM) and keeps secrets out of the config files by
-resolving them from environment variables / Docker secrets via the framework's `%env(...)%`
-syntax.
+Template for a new [gcgov/framework](https://github.com/gcgov/framework) application. It builds two
+container images — nginx and PHP-FPM — and keeps every secret out of the committed files: the one
+`config.json` references them with `%env(...)%`, and production supplies them as provisioned files.
 
 ## Getting started
 
-1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a
-   new repository for your app.
-2. Scaffold the identity/URL placeholders. `gf setup` replaces the `{app_*}` and `{prod_app_*}`
-   tokens across the config, nginx, and compose files:
+1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a new
+   repository for your application.
+
+2. Bootstrap it:
    ```bash
    composer install
-   vendor/bin/gf setup
+   vendor/bin/gf init --title="Permits API"
    ```
-   Tokens you provide include: `{app_guid}` (generate at https://www.guidgenerator.com/),
-   `{app_title}`, `{app_root_url}`, `{app_base_path}`, `{app_redirect_after_login}`,
-   `{app_redirect_after_logout}`, the `{app_microsoft_*}` client id/tenant/drive id, and the
-   matching `{prod_app_*}` values for production.
-3. Provide secrets and per-environment values as **environment variables**, not tokens. The
-   committed root `config.json` references them with `%env(...)%` — e.g.
-   `"uri": "%env(MONGO_URI)%"`, `"clientSecret": "%env(MICROSOFT_CLIENT_SECRET)%"`,
-   `"basePath": "%env(default:...:APP_BASE_PATH)%"`. Whichever values the process environment
-   supplies *are* the environment — there is nothing to activate. Copy `.env.example` to `.env`
-   for local development; use container env / Docker/Kubernetes secrets in production. See
-   **[DOCKER.md](DOCKER.md)** and the framework's
-   [environment-variables guide](https://github.com/gcgov/framework/blob/main/readme/environment-variables.md).
+   `gf init` writes the title and a freshly minted guid into `config.json`, writes a `.env`
+   skeleton from the variables `config.json` references, generates JWT signing keypairs, and
+   installs chrome-headless-shell. It is non-interactive, so it also works from a scaffolding
+   script or a devcontainer.
+
+3. Fill in `.env`, and add the compose variables:
+   ```bash
+   cp .env.example .env.local
+   vendor/bin/gf env              # does it resolve? names the first thing missing
+   ```
+   Every reference in `config.json` is **required** — there are no defaults, and a blank value
+   counts as missing. That is deliberate: a half-configured application should refuse to start
+   rather than run in some unintended posture. `gf env --list` shows the whole list.
+
 4. Run it:
    ```bash
-   cp .env.example .env
-   docker compose --profile dev up --build
+   docker compose up --build
    # → http://localhost:8080
    ```
-5. Test the `widget` module, then create your own models, controllers, and services.
 
-### Working with production data
+5. Try the `widget` module, then write your own models, controllers, and routes.
 
-`config.json` has a CLI-only `environments.prod` entry (stripped at runtime) whose Mongo
-connection references `PROD_MONGO_URI` / `PROD_MONGO_DATABASE`. To pull prod data locally,
-set those two variables in your gitignored `.env` (they are listed, commented, in
-`.env.example`), validate with `vendor/bin/gf env prod`, then run `gf db:restore --from=prod`
-or `gf db:run --env=prod`. No prod config file ever lives in the repo, and the prefixed names
-mean a missing value fails loudly instead of quietly using your local database.
+## Adding what you need
+
+`config.json` ships with five variables and nothing else — no Microsoft, PayJunction, or SMTP
+block. Add the section for an integration when the application actually uses one; a section that
+is absent hydrates to its defaults. Keeping unused credentials out of the file means the
+application never has to be handed a value it does not use in order to boot.
 
 ## Documentation
 
-- **[DOCKER.md](DOCKER.md)** — running in Docker, and how to set environment variables securely
-  (Docker/Swarm/Kubernetes secrets, TLS at the edge, the CLI).
-- The `gf` CLI: `vendor/bin/gf` (`gf setup`, `gf env`, `gf cli`, `gf db:*`, …).
+- **[DOCKER.md](DOCKER.md)** — the images, secrets as provisioned files, health checks, TLS, and
+  how a Release reaches a host.
+- The `gf` CLI: `vendor/bin/gf` (`gf init`, `gf env`, `gf cli`, `gf db:run`, `gf migrate`, …).
+- Framework docs: [environment variables](https://github.com/gcgov/framework/blob/main/readme/environment-variables.md)
+  · [the gf CLI](https://github.com/gcgov/framework/blob/main/readme/gf.md).
 
 ## Running the CI checks (phpstan + phpunit)
 

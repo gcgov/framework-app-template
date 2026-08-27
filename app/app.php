@@ -5,8 +5,12 @@ namespace app;
 use gcgov\framework\config;
 use OpenApi\Attributes as OA;
 
-#[OA\Info( version: '1.0.0', title: '{app_title}',contact: new OA\Contact(email:'itstaff@garrettcountymd.gov') )]
-#[OA\Server(url:'{prod_app_root_url}{prod_app_base_path}')]
+// OpenAPI metadata for the generated documentation. Attributes are compile-time
+// constants, so these are literals to edit once — unlike config.json, they are not
+// environment-driven. A relative server url resolves against whatever host serves the
+// document, which is what makes one spec correct in every Environment.
+#[OA\Info( version: '1.0.0', title: 'Application', contact: new OA\Contact( email: 'itstaff@garrettcountymd.gov' ) )]
+#[OA\Server( url: '/' )]
 final class app implements \gcgov\framework\interfaces\app {
 
 
