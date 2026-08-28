@@ -79,9 +79,20 @@ key and CI never sees a secret. See `docs/adr/0003-secrets-never-decrypt-in-ci-o
 ### JWT signing keys
 
 These are secrets too, and they are gitignored — so they are **not in the build context and not in
-the image**. A container must point `jwtAuth.keyPath` at a provisioned directory
-(`/run/secrets/<app>/jwt`) or authentication cannot work at all. Every replica must have the same
-keys; regenerating them signs every user out.
+the image**. `config.json` reads the directory from `%env(APP_JWT_KEY_PATH)%`, which every
+environment must set — the two halves are only useful together, and mounting the keys without
+pointing the application at them is the failure that looks like success:
+
+| | `APP_JWT_KEY_PATH` |
+|---|---|
+| local dev | `/var/www/app/srv/jwtCertificates/` — where `vendor/bin/gf cert:generate-auth` writes |
+| a Zone | `/run/secrets/<app>/jwt/` — the directory `bin/provision` fills, mounted read-only |
+
+Get it wrong and nothing complains at start-up. `/api/health` and `/api/health/ready` never
+construct the JWT service, so the container reports healthy and a deploy goes green; the first
+sign is a `configException` naming a key directory the moment someone tries to sign in.
+
+Every replica must have the same keys; regenerating them signs every user out.
 
 ### Rules
 

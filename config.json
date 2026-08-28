@@ -29,7 +29,7 @@
 	"jwtAuth": {
 		"redirectAfterLoginUrl": "%env(APP_REDIRECT_AFTER_LOGIN)%",
 		"redirectAfterLogoutUrl": "%env(APP_REDIRECT_AFTER_LOGOUT)%",
-		"keyPath": ""
+		"keyPath": "%env(APP_JWT_KEY_PATH)%"
 	},
 
 	"services": {
