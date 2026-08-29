@@ -85,12 +85,15 @@ pointing the application at them is the failure that looks like success:
 
 | | `APP_JWT_KEY_PATH` |
 |---|---|
-| local dev | `/var/www/app/srv/jwtCertificates/` — where `vendor/bin/gf cert:generate-auth` writes |
+| local dev — `.env`, read by the host gf CLI | `srv/jwtCertificates/` — relative to the application root; where `vendor/bin/gf cert:generate-auth` writes |
+| local dev — the container | `/var/www/app/srv/jwtCertificates/` — set in `docker-compose.yml` itself, because `.env` is shared with the host CLI and one value cannot be right on both filesystems; the bind mount exposes the same directory |
 | a Zone | `/run/secrets/<app>/jwt/` — the directory `bin/provision` fills, mounted read-only |
 
-Get it wrong and nothing complains at start-up. `/api/health` and `/api/health/ready` never
-construct the JWT service, so the container reports healthy and a deploy goes green; the first
-sign is a `configException` naming a key directory the moment someone tries to sign in.
+Get it wrong and `/api/health/ready` fails: when `services.auth` is enabled, readiness checks
+that the key directory holds usable signing keys, precisely so an unmounted or empty key mount
+stops a deploy at the health gate instead of surfacing as a `configException` the moment
+someone tries to sign in. Plain `/api/health` stays I/O-free and keeps the container alive —
+missing keys are a readiness problem, not a liveness one.
 
 Every replica must have the same keys; regenerating them signs every user out.
 

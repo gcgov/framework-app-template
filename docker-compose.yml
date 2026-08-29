@@ -17,6 +17,13 @@ services:
     env_file:
       - .env
       - .env.local
+    environment:
+      # The container-side path for the JWT signing keys. Set HERE rather than in .env:
+      # that file is shared with the host gf CLI — `gf cert:generate-auth` writes the
+      # keys on the host — and one variable cannot hold a value that is right on both
+      # filesystems. `environment` wins over env_file for the container, and the bind
+      # mount below exposes the same srv/jwtCertificates directory at this path.
+      APP_JWT_KEY_PATH: /var/www/app/srv/jwtCertificates/
     volumes:
       - .:/var/www/app
       # Keep the image's vendor/ from being shadowed by the bind mount.
