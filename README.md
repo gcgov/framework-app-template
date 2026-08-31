@@ -94,8 +94,10 @@ boot rather than serve routes that look protected and are not.
 ## Documentation
 
 - **[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md)** — running this application on a development
-  computer, end to end: bootstrap, configuration, the first user, a signed-in request, and what
-  each failure means.
+  computer: the commands for this stack, end to end, and what each failure means. The rules behind
+  them live in the framework, at
+  [readme/local-development.md](https://github.com/gcgov/framework/blob/main/readme/local-development.md) — that copy stays current, this one
+  is frozen at Scaffold time.
 - **[DOCKER.md](DOCKER.md)** — the images, secrets as provisioned files, health checks, TLS, and
   how a Release reaches a host.
 - The `gf` CLI: `vendor/bin/gf` (`gf init`, `gf env`, `gf cli`, `gf db:run`, `gf migrate`, …).

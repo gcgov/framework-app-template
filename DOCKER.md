@@ -17,7 +17,9 @@ updated on a production host.
 ## Local development
 
 **[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) is the walkthrough** — bootstrap through a
-signed-in request, with a troubleshooting table. The short version:
+signed-in request, with a troubleshooting table; the framework's
+[local-development.md](https://github.com/gcgov/framework/blob/main/readme/local-development.md) has the rules behind it. The short
+version:
 
 ```bash
 cp .env.example .env                                          # what docker compose needs
