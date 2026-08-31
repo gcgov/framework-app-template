@@ -1,10 +1,18 @@
 # Local development stack. Production topology lives in the ops repository
 # (gcgov/deploy), not here — this file exists so a developer can run the app.
 #
-#   gf env --init                 # write .env with the variables config.json needs
-#   cp .env.example .env.local    # and the ones docker compose needs
+#   cp .env.example .env          # the variables docker compose itself needs
+#   docker compose build php
+#   docker compose run --rm php vendor/bin/gf init --title="My API"
 #   docker compose up --build
 #   open http://localhost:8080
+#
+# Full walkthrough: LOCAL-DEVELOPMENT.md
+#
+# One .env, not two. Compose interpolates ${HTTP_PORT} and friends from `.env` and
+# from nothing else — it never reads `.env.local` — so a compose variable put there
+# is silently ignored. `gf env --init` appends the application's variables to the
+# same file rather than replacing it, so both halves live together.
 #
 # The php container mounts the working tree, so edits are live; opcache timestamp
 # validation is switched back on in docker/php/conf.d/dev.ini to match.
@@ -15,22 +23,36 @@ services:
       context: .
       target: dev
     env_file:
-      - .env
-      - .env.local
+      # required:false so `docker compose run` works before `.env` exists — which is
+      # exactly when you need it, since `gf init` is what writes the file.
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
     environment:
-      # The container-side path for the JWT signing keys. Set HERE rather than in .env:
-      # that file is shared with the host gf CLI — `gf cert:generate-auth` writes the
-      # keys on the host — and one variable cannot hold a value that is right on both
-      # filesystems. `environment` wins over env_file for the container, and the bind
-      # mount below exposes the same srv/jwtCertificates directory at this path.
+      # The two variables whose correct value differs between the host and the
+      # container. Both are pinned HERE rather than in .env, because that file is
+      # shared with the host gf CLI and one variable cannot hold a value that is
+      # right on both filesystems and both networks. `environment` wins over
+      # env_file for the container.
+      #
+      # The JWT signing keys: `gf cert:generate-auth` writes them on the host, and
+      # the bind mount below exposes that same srv/jwtCertificates directory here.
       APP_JWT_KEY_PATH: /var/www/app/srv/jwtCertificates/
+      # MongoDB: the host reaches the published port as localhost, the container
+      # reaches the service by name. replicaSet=rs0 because every write this
+      # framework makes runs in a transaction — see the mongodb service below.
+      MONGO_URI: mongodb://mongodb:27017/?replicaSet=rs0
     volumes:
       - .:/var/www/app
       # Keep the image's vendor/ from being shadowed by the bind mount.
       - /var/www/app/vendor
     depends_on:
       mongodb:
-        condition: service_started
+        # service_healthy, not service_started: the healthcheck below is what
+        # initiates the replica set, and an application that connects first sees a
+        # node that cannot accept writes.
+        condition: service_healthy
 
   nginx:
     image: nginx:1.27-alpine
@@ -61,10 +83,38 @@ services:
 
   mongodb:
     image: mongo:7
+    # A single-member replica set, not a standalone. This is a correctness
+    # requirement rather than production fidelity: the framework's save(), delete()
+    # and their -Many siblings each open a transaction when not handed a session, and
+    # MongoDB only offers transactions on a replica set or a sharded cluster. A
+    # standalone mongod serves every read and fails every write with "Transaction
+    # numbers are only allowed on a replica set member or mongos" — so the app looks
+    # like it works until the first thing you try to save.
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      # Initiates the set on first boot and reports healthy once it has a primary.
+      # Idempotent, because a healthcheck runs forever: rs.initiate() throws
+      # AlreadyInitialized on every run after the first, and hello().isWritablePrimary
+      # is the condition that actually matters either way.
+      #
+      # The member is named "mongodb" — the name the php container resolves. A host
+      # connecting to the published port must therefore pass directConnection=true
+      # (see .env.example), because it cannot resolve the name the set advertises.
+      test:
+        - CMD-SHELL
+        - >
+          mongosh --quiet --eval '
+            try { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb:27017"}]}) } catch (e) {}
+            quit(db.hello().isWritablePrimary ? 0 : 1)
+          '
+      interval: 5s
+      timeout: 5s
+      start_period: 40s
+      retries: 12
 
 volumes:
   mongo-data:

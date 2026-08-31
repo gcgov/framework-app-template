@@ -9,36 +9,47 @@ container images — nginx and PHP-FPM — and keeps every secret out of the com
 1. [Use this template](https://github.com/gcgov/framework-app-template/generate) to generate a new
    repository for your application.
 
-2. Bootstrap it:
+2. Bootstrap it. Docker and git are the only prerequisites — PHP on the host is optional:
    ```bash
-   composer install
-   vendor/bin/gf init --title="Permits API"
+   cp .env.example .env                 # the variables docker compose itself needs
+   docker compose build php
+   docker compose run --rm php vendor/bin/gf init --title="Permits API"
    ```
-   `gf init` writes the title and a freshly minted guid into `config.json`, writes a `.env`
-   skeleton from the variables `config.json` references, generates JWT signing keypairs, and
-   installs chrome-headless-shell. It is non-interactive, so it also works from a scaffolding
-   script or a devcontainer.
+   `gf init` writes the title and a freshly minted guid into `config.json`, appends the variables
+   `config.json` references to `.env`, generates JWT signing keypairs, and installs
+   chrome-headless-shell. It is non-interactive, so it also works from a scaffolding script or a
+   devcontainer. The working tree is bind-mounted, so all of that lands on your host.
 
-3. Fill in `.env`, and add the compose variables:
+3. Fill in `.env`, then check it:
    ```bash
-   cp .env.example .env.local
-   vendor/bin/gf env              # does it resolve? names the first thing missing
+   docker compose run --rm php vendor/bin/gf env    # does it resolve? names the first thing missing
    ```
    Every reference in `config.json` is **required** — there are no defaults, and a blank value
    counts as missing. That is deliberate: a half-configured application should refuse to start
    rather than run in some unintended posture. `gf env --list` shows the whole list.
 
-4. Run it:
+   One `.env`, not two: docker compose interpolates its own variables from `.env` and never reads
+   `.env.local`, so the two halves share a file.
+
+4. Run it, and create the account you sign in as:
    ```bash
    docker compose up --build
-   # → http://localhost:8080
+   # → http://localhost:8080/health
+
+   docker compose exec php vendor/bin/gf user:create \
+     --email=dev@example.test --roles="User.Read,User.Write,Widget.Read,Widget.Write"
    ```
+   Every route below requires a token, and `blockNewUsers` defaults to true, so this step is how
+   an application gets its first user — there is no way in from outside.
 
 5. Try the `widget` module, then write your own models, controllers, and routes.
 
+**[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) is the full walkthrough**, through signing in and
+writing a document, with a troubleshooting table.
+
 ## Adding what you need
 
-`config.json` ships with seven variables and nothing else — no Microsoft, PayJunction, or SMTP
+`config.json` ships with eight variables and nothing else — no Microsoft, PayJunction, or SMTP
 block. Add the section for an integration when the application actually uses one; a section that
 is absent hydrates to its defaults. Keeping unused credentials out of the file means the
 application never has to be handed a value it does not use in order to boot.
@@ -82,6 +93,9 @@ boot rather than serve routes that look protected and are not.
 
 ## Documentation
 
+- **[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md)** — running this application on a development
+  computer, end to end: bootstrap, configuration, the first user, a signed-in request, and what
+  each failure means.
 - **[DOCKER.md](DOCKER.md)** — the images, secrets as provisioned files, health checks, TLS, and
   how a Release reaches a host.
 - The `gf` CLI: `vendor/bin/gf` (`gf init`, `gf env`, `gf cli`, `gf db:run`, `gf migrate`, …).
@@ -119,3 +133,7 @@ checks.
 You can still run the app under any PHP 8.4+ SAPI with `ext-mongodb`. Point the web root at
 `/www/`, resolve config secrets through your shell environment or a `.env` file at the project
 root, and use `vendor/bin/gf` for CLI tasks. The Docker stack is the supported, reproducible path.
+
+The MongoDB you point it at must be a **replica set** — a `mongod` started with no arguments will
+not do. Every write the framework makes runs in a transaction, so a standalone serves every read
+and fails every write. One member is enough: `mongod --replSet rs0`, then `rs.initiate()`.

@@ -29,7 +29,19 @@ final class ConfigFilesTest extends TestCase {
 		'APP_REDIRECT_AFTER_LOGIN'  => 'http://localhost:5173/auth/sign-in',
 		'APP_REDIRECT_AFTER_LOGOUT' => 'http://localhost:5173/auth/sign-out',
 		'MONGO_DATABASE'            => 'app',
-		'MONGO_URI'                 => 'mongodb://mongodb:27017',
+		'MONGO_URI'                 => 'mongodb://mongodb:27017/?replicaSet=rs0',
+		'APP_JWT_KEY_PATH'          => '/var/www/app/srv/jwtCertificates/',
+	];
+
+	/**
+	 * The variables whose correct value differs between the host gf CLI and the php
+	 * container, so docker-compose.yml pins them and .env carries the host's value.
+	 *
+	 * @var array<string, string>
+	 */
+	private const array CONTAINER_PINNED = [
+		'APP_JWT_KEY_PATH' => '/var/www/app/srv/jwtCertificates/',
+		'MONGO_URI'        => 'mongodb://mongodb:27017/?replicaSet=rs0',
 	];
 
 	/** @var array<string, string> */
@@ -72,7 +84,7 @@ final class ConfigFilesTest extends TestCase {
 
 		$this->assertInstanceOf( unifiedConfig::class, $config );
 		$this->assertSame( 'local', $config->type );
-		$this->assertSame( 'mongodb://mongodb:27017', $config->mongoDatabases[ 0 ]->uri );
+		$this->assertSame( 'mongodb://mongodb:27017/?replicaSet=rs0', $config->mongoDatabases[ 0 ]->uri );
 		$this->assertSame( 'app', $config->mongoDatabases[ 0 ]->database );
 		$this->assertSame( 'Application', $config->app->title, 'the placeholder `gf init --title` overwrites' );
 	}
@@ -214,6 +226,87 @@ final class ConfigFilesTest extends TestCase {
 
 		$this->assertSame( 'http://localhost:8080', $config->getTokenIssuedBy() );
 		$this->assertSame( '/', $config->getTokenPermittedFor() );
+	}
+
+
+	/**
+	 * MongoDB must run as a replica set, and nothing else in the stack says so out loud.
+	 *
+	 * Every write the framework makes opens a transaction, which MongoDB offers only on a
+	 * replica set or a sharded cluster. A standalone mongod serves every read and fails
+	 * every write — so dropping this flag leaves a stack that starts, answers /health, lists
+	 * widgets, and cannot save one. That is a regression a smoke test does not catch, which
+	 * is what earns it a test.
+	 */
+	public function testTheLocalStackRunsMongoAsAReplicaSet(): void {
+		$mongo = $this->composeService( 'mongodb' );
+
+		$this->assertContains( '--replSet', $mongo[ 'command' ] ?? [], 'a standalone mongod cannot serve any write this framework makes' );
+		$this->assertSame( 'service_healthy', $this->composeService( 'php' )[ 'depends_on' ][ 'mongodb' ][ 'condition' ] ?? null, 'the healthcheck is what initiates the set, so php must wait for it rather than for the process' );
+	}
+
+
+	/**
+	 * The variables one .env cannot get right for both sides are pinned in the compose file.
+	 *
+	 * .env is read by the host gf CLI and by the container. MONGO_URI must name localhost on
+	 * one and the compose service on the other; APP_JWT_KEY_PATH must name a host-relative
+	 * and a container-absolute path. Pinning them under `environment:` (which beats
+	 * `env_file:`) is what lets one file serve both — and losing either pin is silent, since
+	 * the host's value resolves perfectly well inside the container and simply points nowhere.
+	 */
+	public function testTheContainerPinsTheVariablesThatDifferBySide(): void {
+		$environment = $this->composeService( 'php' )[ 'environment' ] ?? [];
+
+		foreach( self::CONTAINER_PINNED as $name => $value ) {
+			$this->assertSame( $value, $environment[ $name ] ?? null, $name . ' must be pinned in docker-compose.yml: .env cannot hold a value correct on both the host and the container' );
+		}
+	}
+
+
+	/** Every pinned variable is one config.json actually reads. */
+	public function testEveryPinnedVariableIsReferencedByConfig(): void {
+		$references = configLoader::references( self::ROOT );
+
+		foreach( array_keys( self::CONTAINER_PINNED ) as $name ) {
+			$this->assertArrayHasKey( $name, $references );
+		}
+	}
+
+
+	/**
+	 * .env.example must declare every variable docker compose interpolates.
+	 *
+	 * Compose reads `.env` and only `.env`, so `cp .env.example .env` is the whole supply
+	 * chain for these. A ${VAR} the example file does not declare silently falls back to its
+	 * default — no warning, no error — which is how a published port or a CORS origin ends up
+	 * ignored.
+	 */
+	public function testEnvExampleDeclaresEveryVariableComposeInterpolates(): void {
+		$compose = (string)file_get_contents( self::ROOT . '/docker-compose.yml' );
+		$example = (string)file_get_contents( self::ROOT . '/.env.example' );
+
+		preg_match_all( '/\$\{([A-Z0-9_]+)(?::-[^}]*)?}/', $compose, $matches );
+		$interpolated = array_unique( $matches[ 1 ] );
+		$this->assertNotEmpty( $interpolated );
+
+		foreach( $interpolated as $name ) {
+			$this->assertMatchesRegularExpression( '/^' . preg_quote( $name, '/' ) . '=/m', $example, $name . ' is interpolated by docker-compose.yml but .env.example does not declare it' );
+		}
+	}
+
+
+	/**
+	 * Read one service out of the committed compose file.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function composeService( string $name ): array {
+		/** @var array<string, mixed> $parsed */
+		$parsed = \Symfony\Component\Yaml\Yaml::parseFile( self::ROOT . '/docker-compose.yml' );
+		$this->assertArrayHasKey( $name, $parsed[ 'services' ] );
+
+		return $parsed[ 'services' ][ $name ];
 	}
 
 }

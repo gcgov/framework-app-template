@@ -16,13 +16,21 @@ updated on a production host.
 
 ## Local development
 
+**[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) is the walkthrough** — bootstrap through a
+signed-in request, with a troubleshooting table. The short version:
+
 ```bash
-vendor/bin/gf env --init      # write .env from what config.json references
-cp .env.example .env.local    # and the variables docker compose needs
+cp .env.example .env                                          # what docker compose needs
+docker compose build php
+docker compose run --rm php vendor/bin/gf init --title="…"    # appends what config.json needs
 # fill in the blanks in .env, then:
 docker compose up --build
-open http://localhost:8080
+docker compose exec php vendor/bin/gf user:create --email=… --roles="User.Read,User.Write"
+open http://localhost:8080/health
 ```
+
+One `.env`, not two: docker compose interpolates `${HTTP_PORT}` and the CORS origins from `.env`
+and never reads `.env.local`, so a compose variable put there is ignored silently.
 
 The working tree is bind-mounted into the php container and opcache revalidates on every request
 (`docker/php/conf.d/dev.ini`), so edits are live.
@@ -32,6 +40,11 @@ docker compose exec php vendor/bin/gf env         # does the configuration resol
 docker compose exec php vendor/bin/gf cli:list
 docker compose exec php composer ci
 ```
+
+The compose stack runs MongoDB as a **single-member replica set**, not a standalone. That is a
+correctness requirement: every write the framework makes runs in a transaction, which MongoDB
+offers only on a replica set or a sharded cluster, so a standalone serves every read and fails
+every write.
 
 ---
 
@@ -76,18 +89,23 @@ Zone plus an offline break-glass key. An operator decrypts on their own workstat
 the files to the host — a step deliberately separate from deploying, so no host holds a decryption
 key and CI never sees a secret. See `docs/adr/0003-secrets-never-decrypt-in-ci-or-on-hosts.md`.
 
+### The two variables that differ by side
+
+`.env` is read by both the host `gf` CLI and the php container, and two variables cannot hold one
+value correct for both. Both are pinned in `docker-compose.yml`'s `environment:` block, which wins
+over `env_file:`, so `.env` carries the host's value and the container quietly gets its own:
+
+| | local dev — `.env`, read by the host gf CLI | local dev — the container | a Zone |
+|---|---|---|---|
+| `APP_JWT_KEY_PATH` | `srv/jwtCertificates/`, relative to the application root; where `gf cert:generate-auth` writes | `/var/www/app/srv/jwtCertificates/` — the same directory through the bind mount | `/run/secrets/<app>/jwt/`, the directory `bin/provision` fills, mounted read-only |
+| `MONGO_URI` | `mongodb://localhost:27017/?directConnection=true` — the published port. `directConnection` because the set advertises `mongodb:27017`, which the host cannot resolve | `mongodb://mongodb:27017/?replicaSet=rs0` — the compose service name | the provisioned secret file, via `MONGO_URI_FILE` |
+
 ### JWT signing keys
 
 These are secrets too, and they are gitignored — so they are **not in the build context and not in
 the image**. `config.json` reads the directory from `%env(APP_JWT_KEY_PATH)%`, which every
 environment must set — the two halves are only useful together, and mounting the keys without
-pointing the application at them is the failure that looks like success:
-
-| | `APP_JWT_KEY_PATH` |
-|---|---|
-| local dev — `.env`, read by the host gf CLI | `srv/jwtCertificates/` — relative to the application root; where `vendor/bin/gf cert:generate-auth` writes |
-| local dev — the container | `/var/www/app/srv/jwtCertificates/` — set in `docker-compose.yml` itself, because `.env` is shared with the host CLI and one value cannot be right on both filesystems; the bind mount exposes the same directory |
-| a Zone | `/run/secrets/<app>/jwt/` — the directory `bin/provision` fills, mounted read-only |
+pointing the application at them is the failure that looks like success.
 
 Get it wrong and `/api/health/ready` fails: when `services.auth` is enabled, readiness checks
 that the key directory holds usable signing keys, precisely so an unmounted or empty key mount
