@@ -44,6 +44,11 @@ container images — nginx and PHP-FPM — and keeps every secret out of the com
 
 5. Try the `widget` module, then write your own models, controllers, and routes.
 
+To work against real data rather than an empty database, put a `mongodump` in
+`db/backup/{DatabaseName}/` and run `docker compose run --rm mongo-restore`. It restores over the
+compose network, so your host needs no MongoDB tools, and it can write to no database but this
+stack's.
+
 **[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) is the full walkthrough**, through signing in and
 writing a document, with a troubleshooting table.
 

@@ -116,5 +116,35 @@ services:
       start_period: 40s
       retries: 12
 
+  # Restores the development database from a mongodump backup in db/backup/ — a one-shot
+  # container, run when you want it:
+  #
+  #   docker compose run --rm mongo-restore
+  #
+  # The profile keeps it out of `docker compose up`, so a restore is never something a
+  # boot does to you; `docker compose run` enables the profile of the service it names,
+  # so there is nothing to activate by hand. LOCAL-DEVELOPMENT.md §7 has the walkthrough.
+  mongo-restore:
+    # The same image as the database it restores into, so the tools match the server.
+    image: mongo:7
+    profiles: [ "restore" ]
+    env_file:
+      # MONGO_DATABASE — which database to restore into. The connection itself is NOT
+      # read from here: restore.sh builds it from the compose service name, so this
+      # container can reach no database but the one beside it.
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    entrypoint: [ "bash", "/usr/local/bin/restore.sh" ]
+    volumes:
+      - ./docker/mongodb/restore.sh:/usr/local/bin/restore.sh:ro
+      # Read-only: this container restores backups and must never write one.
+      - ./db/backup:/backup:ro
+    depends_on:
+      mongodb:
+        # A restore is a write, and writes need the primary the healthcheck establishes.
+        condition: service_healthy
+
 volumes:
   mongo-data:

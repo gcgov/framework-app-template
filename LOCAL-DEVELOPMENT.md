@@ -138,7 +138,54 @@ That last call is the one that proves the replica set is doing its job. `grant_t
 
 Also available: `GET /.well-known/jwks.json`, `GET /documentation.yaml`, `GET /user`.
 
-## 7. The day-to-day loop
+## 7. Restore a backup into the development database
+
+A `mongodump` of another database goes in `db/backup/`, in a directory named for the database it
+came from. One command restores it:
+
+```bash
+mongodump --uri="<source uri>" --db=myapp --out=db/backup   # writes db/backup/myapp/
+docker compose run --rm mongo-restore
+```
+
+`mongo-restore` is a one-shot container from the same `mongo:7` image as the database, so your host
+needs no MongoDB tools at all. A compose profile keeps it out of `docker compose up`, so a restore
+is never a side effect of a boot.
+
+| | |
+|---|---|
+| Reads | `db/backup/${MONGO_DATABASE}`, mounted read-only |
+| Writes | the `mongodb` service in this stack, and nothing else |
+| Replaces | every collection the backup holds; a collection it does not hold stays as it is |
+| Restores into | `MONGO_DATABASE`, whatever the backup directory is called |
+
+That third row is worth reading twice: a restore is not a reset. `docker compose down -v` is the
+reset.
+
+Point it at a directory named for a different database with `MONGO_RESTORE_FROM`. Anything after
+the service name reaches `mongorestore` unchanged:
+
+```bash
+docker compose run --rm -e MONGO_RESTORE_FROM=myapp-prod mongo-restore
+docker compose run --rm mongo-restore --numParallelCollections=1
+```
+
+**The connection is not `MONGO_URI`.** `docker/mongodb/restore.sh` builds it from the compose
+service name, so the only database a restore can write to is the one beside it. That is deliberate.
+A workstation that could reach another Environment's database is what retired `gf db:restore` in
+v7, and the backup file is the seam that replaced it.
+
+**A restored account keeps its own password hash**, so you can sign in as a user whose password you
+already know — and as nobody else. Set a password on an account you want to use:
+
+```bash
+docker compose exec php vendor/bin/gf user:create --force --email=dev@example.test --roles="…"
+```
+
+`db/backup/` is git-ignored, and a backup holds whatever the source database holds. Treat the
+directory the way you treat that database.
+
+## 8. The day-to-day loop
 
 Edits are live — the working tree is bind-mounted and `docker/php/conf.d/dev.ini` turns opcache
 timestamp validation back on. Rebuild only when `composer.json`, the `Dockerfile` or `docker/`
@@ -184,6 +231,9 @@ With mongo under its own name on the host, drop `directConnection=true` and use
 | `/health/ready` 503 on `jwtKeys` | The key directory is empty, or `APP_JWT_KEY_PATH` points at the wrong side. §3. Run `gf cert:generate-auth`. |
 | `/health/ready` 503 on `mongo:*` | Mongo is not up or `MONGO_URI` is wrong. `docker compose ps` shows whether its healthcheck went green. |
 | 401 on every application route | No token, or no user. §5 and §6. |
+| `mongo-restore` reports "No backup at db/backup/…" | The directory is named for the database the dump came from, and `mongodump --out=db/backup` names it for you. §7. |
+| `mongorestore` does not know what to do with file `.gitignore` | Expected. It reads `db/backup` as a dump root, and that file is what keeps the directory in git. §7. |
+| Sign-in fails for a user the restore brought in | A restore does not hand you anyone's password, only their hash. Sign in as an account you know, or `gf user:create --force`. §7. |
 | 401 "Invalid client id" | `client_id` does not equal `app.guid`. |
 | 403 after authenticating fine | The user lacks the role the route declares. `user:create --force --roles="…"`. |
 | Sign-in returns an MFA challenge and a token with no roles | `settings.forceMfaForPasswordUsers` is on. Complete `POST /auth/verifyMfaSecret` then `POST /auth/verifyMfaCode`. |
