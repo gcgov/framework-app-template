@@ -1,0 +1,44 @@
+{
+	"app": {
+		"title": "Application",
+		"guid": ""
+	},
+	"logging": {
+		"lifecycle": false,
+		"renderer": false,
+		"destination": "stderr"
+	},
+
+	"type": "%env(APP_TYPE)%",
+	"rootUrl": "%env(APP_ROOT_URL)%",
+	"basePath": "%env(APP_BASE_PATH)%",
+
+	"mongoDatabases": [
+		{
+			"default": true,
+			"database": "%env(MONGO_DATABASE)%",
+			"uri": "%env(secret:MONGO_URI)%",
+			"logging": true,
+			"audit": false,
+			"include_meta": false,
+			"include_metaLabels": false,
+			"include_metaFields": false
+		}
+	],
+
+	"jwtAuth": {
+		"redirectAfterLoginUrl": "%env(APP_REDIRECT_AFTER_LOGIN)%",
+		"redirectAfterLogoutUrl": "%env(APP_REDIRECT_AFTER_LOGOUT)%",
+		"keyPath": "%env(APP_JWT_KEY_PATH)%"
+	},
+
+	"services": {
+		"auth": {
+			"provider": "oauth"
+		},
+		"userCrud": {},
+		"documentation": {}
+	},
+
+	"appDictionary": {}
+}

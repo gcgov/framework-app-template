@@ -1,7 +1,6 @@
 <?php
 //include composer requirements
-include_once('../vendor/autoload.php');
+include_once(__DIR__ . '/../vendor/autoload.php');
 
-$projectRootDirectory = dirname(__FILE__).'/../';
-$framework = new \gcgov\framework\framework( $projectRootDirectory  );
+$framework = new \gcgov\framework\framework();
 echo $framework->runApp();

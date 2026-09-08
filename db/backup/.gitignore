@@ -1,0 +1,6 @@
+# Backups are real data. Nothing in here is ever committed.
+*
+
+# But not these files...
+!.gitignore
+!README.md
