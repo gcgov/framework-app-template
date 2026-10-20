@@ -157,7 +157,10 @@ The `php` container writes to two places:
 
 `config.json` sets `logging.destination` to `both`, so each framework record goes to stderr and to
 its file. The database layer's log (`MongoService.log` and others) is the exception: it writes to
-its file only, whenever the first database in `mongoDatabases` sets `logging` to `true`.
+its file only, and only when the first database in `mongoDatabases` sets `logging` to `true`.
+`config.json` sets it to `false`. Turned on, it writes a line for every database operation, and
+nothing rotates the files. Turned off, it also drops the database layer's own warning and error
+lines. An exception that the database layer throws still reaches the code that called it.
 `docker/php/conf.d/app.ini` and `docker/php/php-fpm.d/zz-app.conf` send PHP's own errors to
 `logs/php-error.log`.
 
@@ -166,8 +169,8 @@ named volume, `<app>_logs`, on `/var/www/app/logs`, and a deploy recreates the c
 the volume. Each application gets its own volume, named after its compose `name:` line.
 `docs/runbooks/review-logs.md` in `gcgov/deploy` says how to read the files on a host.
 
-Nothing rotates the files yet, so they grow until someone empties them. Keep database logging off
-unless you need it: it writes a line for every database operation.
+Nothing rotates the files yet, so they grow until someone empties them. Turn database logging on
+to trace a problem, and turn it off again when you are done.
 
 ---
 

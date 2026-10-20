@@ -18,7 +18,7 @@
 			"default": true,
 			"database": "%env(MONGO_DATABASE)%",
 			"uri": "%env(secret:MONGO_URI)%",
-			"logging": true,
+			"logging": false,
 			"audit": false,
 			"include_meta": false,
 			"include_metaLabels": false,
