@@ -66,7 +66,9 @@ RUN set -eux; \
     mkdir -p srv/tmp/tmp srv/tmp/sessions srv/tmp/files srv/tmp/opcache srv/tmp/soaptmp srv/profile logs; \
     chown -R www-data:www-data /var/www/app
 
-# Nothing in the image needs to be writable by the application except srv/tmp.
+# Nothing in the image needs to be writable by the application except srv/tmp and logs.
+# Production mounts a named volume on logs/, and Docker copies this directory's
+# www-data ownership into that volume when it is first created.
 # The JWT signing keys and every other secret are provisioned at runtime, never baked
 # in — they are gitignored, so they are not in this build context at all.
 USER www-data

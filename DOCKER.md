@@ -146,6 +146,31 @@ to match when the application is not served at the domain root.
 
 ---
 
+## Logs
+
+The `php` container writes to two places:
+
+| Where | What | Survives a deploy |
+|---|---|---|
+| stderr (`docker logs`) | Framework log records as JSON lines, and PHP-FPM's own lines | No |
+| `/var/www/app/logs/` | `php-error.log` (PHP errors and warnings), and one `{channel}.log` per framework log channel | Yes, in production |
+
+`config.json` sets `logging.destination` to `both`, so each framework record goes to stderr and to
+its file. The database layer's log (`MongoService.log` and others) is the exception: it writes to
+its file only, whenever the first database in `mongoDatabases` sets `logging` to `true`.
+`docker/php/conf.d/app.ini` and `docker/php/php-fpm.d/zz-app.conf` send PHP's own errors to
+`logs/php-error.log`.
+
+The image does not make `logs/` persistent. The ops repository does: its compose file mounts a
+named volume, `<app>_logs`, on `/var/www/app/logs`, and a deploy recreates the container but keeps
+the volume. Each application gets its own volume, named after its compose `name:` line.
+`docs/runbooks/review-logs.md` in `gcgov/deploy` says how to read the files on a host.
+
+Nothing rotates the files yet, so they grow until someone empties them. Keep database logging off
+unless you need it: it writes a line for every database operation.
+
+---
+
 ## Building
 
 ```bash
@@ -197,5 +222,6 @@ and a duplicate key stops nginx from starting.
 
 - **A production compose file.** It is in `gcgov/deploy`, under the Zone that runs this application.
 - **Swarm or Kubernetes manifests.** The deployment target is Docker on three Ubuntu hosts.
-- **Anything that writes to the container filesystem and expects it to survive.** Logs go to stderr;
-  uploads and sessions under `srv/tmp` are scratch space that a deploy discards.
+- **Anything that writes to the container filesystem and expects it to survive.** Uploads and
+  sessions under `srv/tmp` are scratch space that a deploy discards. `logs/` is the one exception,
+  and only because the ops repository mounts a volume there. See [Logs](#logs).

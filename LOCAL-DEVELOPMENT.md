@@ -192,7 +192,7 @@ timestamp validation back on. Rebuild only when `composer.json`, the `Dockerfile
 changes.
 
 ```bash
-docker compose logs -f php                       # logs go to stderr, not logs/*.log
+docker compose logs -f php                       # framework logs; PHP errors are in logs/php-error.log
 docker compose exec php vendor/bin/gf cli:list
 docker compose exec php vendor/bin/gf cli /cli/widgets
 docker compose exec php composer ci
