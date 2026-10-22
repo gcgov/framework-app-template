@@ -21,8 +21,15 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         git unzip libsodium-dev libzip-dev; \
     docker-php-ext-install -j"$(nproc)" sodium zip opcache; \
+    #install the mongo extension \
+    #libssl-dev must be present first: pecl builds libmongoc without TLS or crypto when \
+    #the OpenSSL headers are missing, and that build cannot authenticate with SCRAM-SHA-256 \
+    #or open a TLS connection - every query fails, and /health/ready answers 503 \
+    apt-get install -y --no-install-recommends libssl-dev; \
     pecl install mongodb; \
     docker-php-ext-enable mongodb; \
+    #fail the build, not the deploy, if the extension still came out without TLS or crypto \
+    php -r 'ob_start(); phpinfo(INFO_MODULES); $i = ob_get_clean(); exit(preg_match("/libmongoc SSL => enabled/", $i) && preg_match("/libmongoc crypto => enabled/", $i) ? 0 : 1);'; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
