@@ -95,7 +95,7 @@ a plain image would — its healthcheck initiates the replica set, and php waits
 only on a replica set or a sharded cluster — so a standalone serves every read and fails every
 write. That is the failure this stack exists to prevent, and it is worth recognising on sight.
 ([Detail](https://github.com/gcgov/framework/blob/main/readme/local-development.md#1-the-database-must-be-a-replica-set) ·
-[ADR](https://github.com/gcgov/framework/blob/main/docs/adr/0008-writes-are-transactional-so-mongodb-is-a-replica-set.md))
+[ADR](https://github.com/gcgov/framework/blob/main/docs/adr/0004-writes-are-transactional-so-mongodb-is-a-replica-set.md))
 
 ## 5. Create the Bootstrap User
 

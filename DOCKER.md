@@ -86,10 +86,12 @@ Why files rather than environment variables: a value in the environment is visib
 `docker inspect`, readable from `/proc/<pid>/environ`, and inherited by every child process. A
 mounted file is none of those things.
 
-**Where the values come from.** Encrypted with SOPS in `gcgov/deploy`, against a GCP KMS key per
-Zone plus an offline break-glass key. An operator decrypts on their own workstation and provisions
-the files to the host — a step deliberately separate from deploying, so no host holds a decryption
-key and CI never sees a secret. See `docs/adr/0003-secrets-never-decrypt-in-ci-or-on-hosts.md`.
+**Where the values come from.** Encrypted with SOPS in `gcgov/deploy`, against an Azure Key Vault
+key — one vault per Zone — plus an offline break-glass key. An operator decrypts on their own
+workstation and provisions the files to the host — a step deliberately separate from deploying, so
+no host holds a decryption key and CI never sees a secret. See
+`gcgov/deploy docs/adr/0001-secrets-never-decrypt-in-ci-or-on-hosts.md`, and
+`gcgov/deploy docs/adr/0004-azure-key-vault-per-zone-for-deployment-secrets.md` for why Azure Key Vault.
 
 ### The two variables that differ by side
 
