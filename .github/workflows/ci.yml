@@ -10,7 +10,8 @@ permissions:
 
 env:
   # The prod image is php:8.4-fpm; composer.lock is resolved for that platform
-  # (see config.platform in composer.json). Keep these in step.
+  # (see config.platform in composer.json). Keep these in step. Both this and the image
+  # float to the newest 8.4 patch; config.platform.php is the floor (see DOCKER.md).
   PHP_VERSION: '8.4'
 
 jobs:
@@ -109,8 +110,7 @@ jobs:
           docker run --rm --entrypoint php-fpm app:php -tt > /tmp/fpm-config.log 2>&1
           grep -qF 'php_admin_value[error_log] = /proc/self/fd/2' /tmp/fpm-config.log
           grep -qE 'log_limit = 65536$' /tmp/fpm-config.log
-          # The database layer's log writes to a file in logs/, whatever logging.destination
-          # says, while config.json turns it on. It needs the directory to be writable.
+          # logs/ stays writable for an application that sets logging.destination to "file".
           docker run --rm --entrypoint test app:php -w logs
 
       - name: php — opcache and the upload limits the nginx config assumes

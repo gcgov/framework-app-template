@@ -166,13 +166,13 @@ An uncaught exception prints several lines: the message, `Stack trace:`, one lin
 `thrown in`. Each line is a separate log entry. A CLI command run with `docker exec` sends its
 errors to the terminal that ran it, not to the container's output.
 
-The database layer's log (`MongoService.log` and others) is the one exception. It writes to a
-file in `logs/`, whatever `logging.destination` says, and only when the first database in
-`mongoDatabases` sets `logging` to `true`. `config.json` sets it to `false`. Turned on, it writes
-a line for every database operation into the container's own filesystem. Nothing rotates those
-files, and the next deploy discards them. Turned off, it also drops the database layer's own
-warning and error lines. An exception that the database layer throws still reaches the code that
-called it. Turn it on to trace a problem, and turn it off again when you are done.
+The database layer's log follows `logging.destination` too, so it goes to stderr with everything
+else. It writes only when the first database in `mongoDatabases` sets `logging` to `true`.
+`config.json` sets it to `false`. Turned on, it writes a line for every database operation, which
+the host's journal and Blumira then hold. That many lines can reach journald's rate limit, which
+every container on the host shares. Turned off, it also drops the database layer's own warning and
+error lines. An exception that the database layer throws still reaches the code that called it.
+Turn it on to trace a problem, and turn it off again when you are done.
 
 The image keeps no log of its own. The ops repository keeps the output: its compose files use
 Docker's `journald` log driver, so the host's journal holds a container's output after a deploy
@@ -193,6 +193,11 @@ works is one pull request rather than one per application.
 
 `composer.lock` is committed and `config.platform.php` pins resolution to the runtime the image
 runs. Without that pin, resolving on a newer PHP locks packages that will not install in the image.
+
+The pin is a floor, not the runtime. Composer accepts only an exact version there, so it names
+the newest 8.4 patch release. The `php:8.4-fpm` tag and CI's `PHP_VERSION: '8.4'` both float to
+the newest patch, so they never run below the floor. Raise the pin when `composer update` reports
+that a package needs a newer patch than the pin, or when a new 8.4 patch ships.
 
 ---
 
