@@ -150,29 +150,33 @@ to match when the application is not served at the domain root.
 
 ## Logs
 
-The `php` container writes to two places:
+The `php` container writes every log line to stderr, which is the container's output:
 
-| Where | What | Survives a deploy |
-|---|---|---|
-| stderr (`docker logs`) | Framework log records as JSON lines, and PHP-FPM's own lines | No |
-| `/var/www/app/logs/` | `php-error.log` (PHP errors and warnings), and one `{channel}.log` per framework log channel | Yes, in production |
+| What | Line format |
+|---|---|
+| PHP's own errors, warnings and fatal errors | `[19-Oct-2026 16:29:24 America/New_York] PHP Warning:  …` |
+| Framework log records | One JSON object per line |
+| PHP-FPM's own lines, and one access line per request | `[19-Oct-2026 20:29:19] NOTICE: …`, `172.18.0.4 -  19/Oct/2026:20:29:24 +0000 "GET /index.php" 200` |
 
-`config.json` sets `logging.destination` to `both`, so each framework record goes to stderr and to
-its file. The database layer's log (`MongoService.log` and others) is the exception: it writes to
-its file only, and only when the first database in `mongoDatabases` sets `logging` to `true`.
-`config.json` sets it to `false`. Turned on, it writes a line for every database operation, and
-nothing rotates the files. Turned off, it also drops the database layer's own warning and error
-lines. An exception that the database layer throws still reaches the code that called it.
-`docker/php/conf.d/app.ini` and `docker/php/php-fpm.d/zz-app.conf` send PHP's own errors to
-`logs/php-error.log`.
+`config.json` sets `logging.destination` to `stderr`. `docker/php/conf.d/app.ini` and
+`docker/php/php-fpm.d/zz-app.conf` set PHP's `error_log` to `/proc/self/fd/2`, which is stderr.
+The pool also raises FPM's `log_limit` to 65536 bytes, so a long JSON record stays on one line.
 
-The image does not make `logs/` persistent. The ops repository does: its compose file mounts a
-named volume, `<app>_logs`, on `/var/www/app/logs`, and a deploy recreates the container but keeps
-the volume. Each application gets its own volume, named after its compose `name:` line.
-`docs/runbooks/review-logs.md` in `gcgov/deploy` says how to read the files on a host.
+An uncaught exception prints several lines: the message, `Stack trace:`, one line per frame, and
+`thrown in`. Each line is a separate log entry. A CLI command run with `docker exec` sends its
+errors to the terminal that ran it, not to the container's output.
 
-Nothing rotates the files yet, so they grow until someone empties them. Turn database logging on
-to trace a problem, and turn it off again when you are done.
+The database layer's log (`MongoService.log` and others) is the one exception. It writes to a
+file in `logs/`, whatever `logging.destination` says, and only when the first database in
+`mongoDatabases` sets `logging` to `true`. `config.json` sets it to `false`. Turned on, it writes
+a line for every database operation into the container's own filesystem. Nothing rotates those
+files, and the next deploy discards them. Turned off, it also drops the database layer's own
+warning and error lines. An exception that the database layer throws still reaches the code that
+called it. Turn it on to trace a problem, and turn it off again when you are done.
+
+The image keeps no log of its own. The ops repository keeps the output: its compose files use
+Docker's `journald` log driver, so the host's journal holds a container's output after a deploy
+removes the container. `docs/runbooks/review-logs.md` in `gcgov/deploy` says how to read it.
 
 ---
 
@@ -228,5 +232,5 @@ and a duplicate key stops nginx from starting.
 - **A production compose file.** It is in `gcgov/deploy`, under the Zone that runs this application.
 - **Swarm or Kubernetes manifests.** The deployment target is Docker on three Ubuntu hosts.
 - **Anything that writes to the container filesystem and expects it to survive.** Uploads and
-  sessions under `srv/tmp` are scratch space that a deploy discards. `logs/` is the one exception,
-  and only because the ops repository mounts a volume there. See [Logs](#logs).
+  sessions under `srv/tmp` are scratch space that a deploy discards, and so is `logs/`. Every log
+  line goes to the container's output instead. See [Logs](#logs).

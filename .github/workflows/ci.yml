@@ -98,10 +98,16 @@ jobs:
           # www.conf to avoid; fail if it comes back.
           docker run --rm --entrypoint php-fpm app:php -t 2>&1 | tee /tmp/fpm.log
           ! grep -qi "when FPM is not running as root" /tmp/fpm.log
-          # PHP's error_log and the framework's log files live in logs/. Production mounts
-          # a named volume there, which copies this directory's ownership when it is new.
+          # PHP errors go to stderr, in the CLI and in the FPM pool, so they reach the
+          # container's output. FPM passes a long line on whole. -tt prints the merged
+          # config, which is the only place the pool's php_admin_value shows.
+          docker run --rm --entrypoint php app:php -r 'exit(ini_get("error_log") === "/proc/self/fd/2" ? 0 : 1);'
+          docker run --rm --entrypoint php-fpm app:php -tt > /tmp/fpm-config.log 2>&1
+          grep -qF 'php_admin_value[error_log] = /proc/self/fd/2' /tmp/fpm-config.log
+          grep -qE 'log_limit = 65536$' /tmp/fpm-config.log
+          # The database layer's log writes to a file in logs/, whatever logging.destination
+          # says, while config.json turns it on. It needs the directory to be writable.
           docker run --rm --entrypoint test app:php -w logs
-          docker run --rm --entrypoint php app:php -r 'exit(ini_get("error_log") === "/var/www/app/logs/php-error.log" ? 0 : 1);'
 
       - name: php — opcache and the upload limits the nginx config assumes
         if: matrix.target == 'php'

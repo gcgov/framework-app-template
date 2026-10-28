@@ -6,7 +6,7 @@
 	"logging": {
 		"lifecycle": false,
 		"renderer": false,
-		"destination": "both"
+		"destination": "stderr"
 	},
 
 	"type": "%env(APP_TYPE)%",
