@@ -56,8 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Render the template and validate nginx config
+        # nginx -t resolves the fastcgi_pass host while it loads the config, and outside
+        # compose no host is called php. --add-host gives the name an address; nothing
+        # connects to it.
         run: |
           docker run --rm \
+            --add-host=php:127.0.0.1 \
             -e PHP_FPM_HOST=php:9000 \
             -e CORS_ORIGIN_APP=http://localhost:8080 \
             -e CORS_ORIGIN_FRONTEND=http://localhost:5173 \
