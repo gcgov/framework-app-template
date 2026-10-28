@@ -20,7 +20,9 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         git unzip libsodium-dev libzip-dev; \
-    docker-php-ext-install -j"$(nproc)" sodium zip opcache; \
+    #sockets: the framework requires chrome-php/chrome, whose chrome-php/wrench needs it, \
+    #and composer install refuses the lock without it \
+    docker-php-ext-install -j"$(nproc)" sodium zip opcache sockets; \
     #install the mongo extension \
     #libssl-dev must be present first: pecl builds libmongoc without TLS or crypto when \
     #the OpenSSL headers are missing, and that build cannot authenticate with SCRAM-SHA-256 \
@@ -74,8 +76,9 @@ RUN set -eux; \
     chown -R www-data:www-data /var/www/app
 
 # Nothing in the image needs to be writable by the application except srv/tmp and logs.
-# Production mounts a named volume on logs/, and Docker copies this directory's
-# www-data ownership into that volume when it is first created.
+# PHP errors and every framework record go to stderr. logs/ stays writable for an
+# application that sets logging.destination to "file". Production mounts nothing there,
+# so a deploy discards whatever lands in it.
 # The JWT signing keys and every other secret are provisioned at runtime, never baked
 # in — they are gitignored, so they are not in this build context at all.
 USER www-data

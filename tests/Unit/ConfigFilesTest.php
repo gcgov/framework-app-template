@@ -152,11 +152,12 @@ final class ConfigFilesTest extends TestCase {
 
 
 	/**
-	 * stderr feeds `docker logs`. The files in logs/ are the copy that survives a deploy:
-	 * production mounts a named volume there (see the php service in gcgov/deploy).
+	 * The container's output is the log: gcgov/deploy keeps it in the host's journal across
+	 * deploys. A file in logs/ would need a volume and a rotation rule, and would never
+	 * reach the journal.
 	 */
-	public function testLoggingGoesToStderrAndToLogFiles(): void {
-		$this->assertSame( 'both', configLoader::load( self::ROOT )->logging->destination );
+	public function testLoggingGoesToStderr(): void {
+		$this->assertSame( 'stderr', configLoader::load( self::ROOT )->logging->destination );
 	}
 
 
