@@ -1,0 +1,21 @@
+.git
+.github
+vendor
+node_modules
+.env
+.env.local
+secrets
+*.env
+*.md
+.idea
+.phpunit.cache
+.phpunit.result.cache
+.phpstan-cache
+srv/tmp/**/*
+srv/profile/*
+logs/*
+!**/.gitignore
+
+# A restore source is a copy of a database, and the php stage does `COPY . /var/www/app`.
+# Keep backups out of the build context entirely — the local stack bind-mounts them.
+db/backup/*

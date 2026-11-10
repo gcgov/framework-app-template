@@ -1,0 +1,150 @@
+# Local development stack. Production topology lives in the ops repository
+# (gcgov/deploy), not here — this file exists so a developer can run the app.
+#
+#   cp .env.example .env          # the variables docker compose itself needs
+#   docker compose build php
+#   docker compose run --rm php vendor/bin/gf init --title="My API"
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# Full walkthrough: LOCAL-DEVELOPMENT.md
+#
+# One .env, not two. Compose interpolates ${HTTP_PORT} and friends from `.env` and
+# from nothing else — it never reads `.env.local` — so a compose variable put there
+# is silently ignored. `gf env --init` appends the application's variables to the
+# same file rather than replacing it, so both halves live together.
+#
+# The php container mounts the working tree, so edits are live; opcache timestamp
+# validation is switched back on in docker/php/conf.d/dev.ini to match.
+
+services:
+  php:
+    build:
+      context: .
+      target: dev
+    env_file:
+      # required:false so `docker compose run` works before `.env` exists — which is
+      # exactly when you need it, since `gf init` is what writes the file.
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      # The two variables whose correct value differs between the host and the
+      # container. Both are pinned HERE rather than in .env, because that file is
+      # shared with the host gf CLI and one variable cannot hold a value that is
+      # right on both filesystems and both networks. `environment` wins over
+      # env_file for the container.
+      #
+      # The JWT signing keys: `gf cert:generate-auth` writes them on the host, and
+      # the bind mount below exposes that same srv/jwtCertificates directory here.
+      APP_JWT_KEY_PATH: /var/www/app/srv/jwtCertificates/
+      # MongoDB: the host reaches the published port as localhost, the container
+      # reaches the service by name. replicaSet=rs0 because every write this
+      # framework makes runs in a transaction — see the mongodb service below.
+      MONGO_URI: mongodb://mongodb:27017/?replicaSet=rs0
+    volumes:
+      - .:/var/www/app
+      # Keep the image's vendor/ from being shadowed by the bind mount.
+      - /var/www/app/vendor
+    depends_on:
+      mongodb:
+        # service_healthy, not service_started: the healthcheck below is what
+        # initiates the replica set, and an application that connects first sees a
+        # node that cannot accept writes.
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - php
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      # Static assets come from the working tree in development; the production nginx
+      # image bakes them in instead.
+      - ./www:/var/www/app/www:ro
+    environment:
+      PHP_FPM_HOST: "${PHP_FPM_HOST:-php:9000}"
+      CORS_ORIGIN_APP: "${CORS_ORIGIN_APP:-http://localhost:8080}"
+      CORS_ORIGIN_FRONTEND: "${CORS_ORIGIN_FRONTEND:-http://localhost:5173}"
+      CORS_ORIGIN_SWAGGER: "${CORS_ORIGIN_SWAGGER:-http://localhost:8081}"
+      # Substitute only our own variables; nginx's own $variables must survive.
+      NGINX_ENVSUBST_FILTER: "^(CORS_ORIGIN_|PHP_FPM_HOST)"
+    healthcheck:
+      # Matches the production image's check. APP_BASE_PATH is the application's, so
+      # adjust the path if the app is not served at the domain root.
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health || exit 1" ]
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
+
+  mongodb:
+    image: mongo:7
+    # A single-member replica set, not a standalone. This is a correctness
+    # requirement rather than production fidelity: the framework's save(), delete()
+    # and their -Many siblings each open a transaction when not handed a session, and
+    # MongoDB only offers transactions on a replica set or a sharded cluster. A
+    # standalone mongod serves every read and fails every write with "Transaction
+    # numbers are only allowed on a replica set member or mongos" — so the app looks
+    # like it works until the first thing you try to save.
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Initiates the set on first boot and reports healthy once it has a primary.
+      # Idempotent, because a healthcheck runs forever: rs.initiate() throws
+      # AlreadyInitialized on every run after the first, and hello().isWritablePrimary
+      # is the condition that actually matters either way.
+      #
+      # The member is named "mongodb" — the name the php container resolves. A host
+      # connecting to the published port must therefore pass directConnection=true
+      # (see .env.example), because it cannot resolve the name the set advertises.
+      test:
+        - CMD-SHELL
+        - >
+          mongosh --quiet --eval '
+            try { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb:27017"}]}) } catch (e) {}
+            quit(db.hello().isWritablePrimary ? 0 : 1)
+          '
+      interval: 5s
+      timeout: 5s
+      start_period: 40s
+      retries: 12
+
+  # Restores the development database from a mongodump backup in db/backup/ — a one-shot
+  # container, run when you want it:
+  #
+  #   docker compose run --rm mongo-restore
+  #
+  # The profile keeps it out of `docker compose up`, so a restore is never something a
+  # boot does to you; `docker compose run` enables the profile of the service it names,
+  # so there is nothing to activate by hand. LOCAL-DEVELOPMENT.md §7 has the walkthrough.
+  mongo-restore:
+    # The same image as the database it restores into, so the tools match the server.
+    image: mongo:7
+    profiles: [ "restore" ]
+    env_file:
+      # MONGO_DATABASE — which database to restore into. The connection itself is NOT
+      # read from here: restore.sh builds it from the compose service name, so this
+      # container can reach no database but the one beside it.
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    entrypoint: [ "bash", "/usr/local/bin/restore.sh" ]
+    volumes:
+      - ./docker/mongodb/restore.sh:/usr/local/bin/restore.sh:ro
+      # Read-only: this container restores backups and must never write one.
+      - ./db/backup:/backup:ro
+    depends_on:
+      mongodb:
+        # A restore is a write, and writes need the primary the healthcheck establishes.
+        condition: service_healthy
+
+volumes:
+  mongo-data:

@@ -1,0 +1,101 @@
+# Nginx site config for a gcgov/framework API (PHP-FPM upstream).
+#
+# This file is a template: the stock nginx image runs `envsubst` over it at
+# container start, substituting only the ${CORS_ORIGIN_*} and ${PHP_FPM_HOST}
+# environment variables (NGINX_ENVSUBST_FILTER). All nginx runtime variables
+# ($uri, $http_origin, …) are left untouched.
+#
+# It replaces the five IIS web.config behaviors the framework relied on:
+#   1. HTTPS scheme      -> taken from the edge via X-Forwarded-Proto (no in-container redirect)
+#   2. trailing slash    -> stripped
+#   3. static assets     -> served directly (theme/, favicon.ico)
+#   4. front controller  -> everything else routed to index.php (REQUEST_URI preserved)
+#   5. CORS              -> allowlisted origins, credentials, preflight
+
+# --- Scheme forwarded by the TLS-terminating edge (reverse proxy / load balancer) ---
+map $http_x_forwarded_proto $forwarded_https {
+    https   on;
+    default "";
+}
+map $http_x_forwarded_proto $forwarded_scheme {
+    default $scheme;
+    https   https;
+    http    http;
+}
+
+# --- CORS allowlist. Only these exact origins get Access-Control-Allow-Origin. ---
+# Keep all three distinct and non-empty (set unused ones to a harmless placeholder).
+map $http_origin $cors_origin {
+    default                     "";
+    "${CORS_ORIGIN_APP}"        "${CORS_ORIGIN_APP}";
+    "${CORS_ORIGIN_FRONTEND}"   "${CORS_ORIGIN_FRONTEND}";
+    "${CORS_ORIGIN_SWAGGER}"    "${CORS_ORIGIN_SWAGGER}";
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    root  /var/www/app/www;
+    index index.php;
+
+    # Large uploads (matches the previous IIS maxAllowedContentLength).
+    client_max_body_size 1024m;
+
+    # (2) Strip trailing slash. Unconditional approximation of IIS's
+    # not-a-file / not-a-directory check — safe for an API with no real
+    # directory URLs.
+    rewrite ^/(.+)/$ /$1 permanent;
+
+    # CORS response headers on every response (an empty $cors_origin means the
+    # request origin was not allowlisted).
+    add_header Access-Control-Allow-Origin      $cors_origin always;
+    add_header Access-Control-Allow-Credentials true always;
+    add_header Access-Control-Expose-Headers    "X-Total-Count, X-Page, X-Count, X-Limit, X-Page-Count, Content-Disposition" always;
+    add_header Vary                             Origin always;
+
+    # (3) Static pass-through — served straight from disk, never routed to PHP.
+    location ~ ^/(theme/|favicon\.ico) {
+        try_files $uri =404;
+    }
+
+    # (4) Front controller.
+    location / {
+        # (5) CORS preflight — answered directly, never routed to PHP.
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Origin      $cors_origin always;
+            add_header Access-Control-Allow-Credentials true always;
+            add_header Access-Control-Allow-Methods     "GET, POST, PUT, DELETE, OPTIONS" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-MsAccessToken" always;
+            add_header Access-Control-Max-Age           120 always;
+            add_header Content-Type                     "text/plain; charset=utf-8" always;
+            add_header Content-Length                   0 always;
+            return 204;
+        }
+        # REQUEST_URI is preserved natively — the framework router reads it directly.
+        try_files $uri /index.php$is_args$args;
+    }
+
+    # Only the single front controller is executed; all other .php is denied.
+    location = /index.php {
+        include        fastcgi_params;
+        fastcgi_pass   ${PHP_FPM_HOST};
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param  SCRIPT_NAME     /index.php;
+        # (1) Hand PHP the real client scheme from the edge.
+        fastcgi_param  HTTPS           $forwarded_https  if_not_empty;
+        fastcgi_param  REQUEST_SCHEME  $forwarded_scheme if_not_empty;
+        fastcgi_read_timeout 300;
+
+        # add_header in a location resets inherited headers, so re-declare CORS here.
+        add_header Access-Control-Allow-Origin      $cors_origin always;
+        add_header Access-Control-Allow-Credentials true always;
+        add_header Access-Control-Expose-Headers    "X-Total-Count, X-Page, X-Count, X-Limit, X-Page-Count, Content-Disposition" always;
+        add_header Vary                             Origin always;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+}
