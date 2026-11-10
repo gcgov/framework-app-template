@@ -11,3 +11,5 @@ version.json
 .phpunit.cache/
 .phpunit.result.cache
 .phpstan-cache/
+
+composer.lock
